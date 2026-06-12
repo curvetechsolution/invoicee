@@ -2,13 +2,18 @@ import { useState } from "react";
 import { useDashboardStats } from "@/hooks/use-dashboard";
 import { StatCard } from "@/components/StatCard";
 import { ActionButton } from "@/components/ActionButton";
-import { DollarSign, FileText, Receipt, Send, Plus, Calendar, Bell } from "lucide-react";
+import { DollarSign, FileText, Receipt, Send, Plus, Calendar, Bell, CheckCircle, XCircle, Loader2, Clock } from "lucide-react";
 import logoImg from "@assets/Curve_Tech_Solution_Logo_1767002702612.png";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { type InvoiceRequest } from "@shared/schema";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { format } from "date-fns";
 
 const CURRENCIES = [
   { code: "USD", symbol: "$" },
@@ -27,30 +32,62 @@ export default function Home() {
   const [selectedCurrency, setSelectedCurrency] = useState(CURRENCIES[0]);
   const [selectedMonth, setSelectedMonth] = useState<string>("-1");
   const [selectedYear, setSelectedYear] = useState<string>(new Date().getFullYear().toString());
-  
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
+
   const { data: stats, isLoading } = useDashboardStats(
-    parseInt(selectedMonth), 
+    parseInt(selectedMonth),
     parseInt(selectedYear),
     selectedCurrency.code
   );
   const { toast } = useToast();
 
   // Pending invoice requests
-  const { data: pendingRequests = [] } = useQuery<InvoiceRequest[]>({
+  const { data: allRequests = [], refetch: refetchRequests } = useQuery<InvoiceRequest[]>({
     queryKey: ["/api/invoice-requests"],
-    refetchInterval: 30000, // auto-refresh every 30s
+    refetchInterval: 30000,
   });
-  const pendingCount = pendingRequests.filter(r => r.status === "pending").length;
 
-  const handleCreateInvoice = () => {
-    setLocation("/invoices/new");
+  const pendingRequests = allRequests.filter(r => r.status === "pending");
+  const pendingCount = pendingRequests.length;
+
+  // ── Accept ──────────────────────────────────────────────────────
+  const handleAccept = async (req: InvoiceRequest) => {
+    setActionLoading(`accept-${req.id}`);
+    try {
+      const result = await apiRequest("PATCH", `/api/invoice-requests/${req.id}`, { status: "accepted" });
+      queryClient.invalidateQueries({ queryKey: ["/api/invoice-requests"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
+
+      const data = result as any;
+      if (data?.generatedInvoiceId) {
+        toast({
+          title: "✅ Request Accepted",
+          description: `Invoice generated for ${req.clientName}. Opening...`,
+        });
+        setTimeout(() => setLocation(`/invoices/${data.generatedInvoiceId}/preview`), 1200);
+      } else {
+        toast({ title: "Request Accepted", description: `Invoice request from ${req.clientName} accepted.` });
+      }
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally {
+      setActionLoading(null);
+    }
   };
 
-  const handleCreateQuote = () => {
-    toast({
-      title: "Coming Soon",
-      description: "Quote creation will be available in the next update.",
-    });
+  // ── Decline ─────────────────────────────────────────────────────
+  const handleDecline = async (req: InvoiceRequest) => {
+    setActionLoading(`decline-${req.id}`);
+    try {
+      await apiRequest("PATCH", `/api/invoice-requests/${req.id}`, { status: "declined" });
+      queryClient.invalidateQueries({ queryKey: ["/api/invoice-requests"] });
+      toast({ title: "Request Declined", description: `Request from ${req.clientName} declined.` });
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally {
+      setActionLoading(null);
+    }
   };
 
   const formatCurrency = (val?: number) => {
@@ -89,49 +126,49 @@ export default function Home() {
             </h1>
           </div>
           <div className="flex items-center gap-4">
-             <Select 
-               value={selectedCurrency.code} 
-               onValueChange={(val) => setSelectedCurrency(CURRENCIES.find(c => c.code === val) || CURRENCIES[0])}
-             >
-               <SelectTrigger className="w-[80px] h-9">
-                 <SelectValue />
-               </SelectTrigger>
-               <SelectContent>
-                 {CURRENCIES.map(c => (
-                   <SelectItem key={c.code} value={c.code}>{c.code}</SelectItem>
-                 ))}
-               </SelectContent>
-             </Select>
+            <Select
+              value={selectedCurrency.code}
+              onValueChange={(val) => setSelectedCurrency(CURRENCIES.find(c => c.code === val) || CURRENCIES[0])}
+            >
+              <SelectTrigger className="w-[80px] h-9">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {CURRENCIES.map(c => (
+                  <SelectItem key={c.code} value={c.code}>{c.code}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
-             {/* 🔔 Pending Requests Bell */}
-             <button
-               onClick={() => setLocation("/invoices?tab=pending")}
-               className="relative w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition-colors"
-               title="Pending Invoice Requests"
-             >
-               <Bell className="w-4 h-4 text-slate-600" />
-               {pendingCount > 0 && (
-                 <span className="absolute -top-1 -right-1 inline-flex items-center justify-center w-5 h-5 text-xs font-bold bg-red-500 text-white rounded-full animate-pulse">
-                   {pendingCount}
-                 </span>
-               )}
-             </button>
+            {/* Bell — goes to invoices pending tab */}
+            <button
+              onClick={() => setLocation("/invoices?tab=pending")}
+              className="relative w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition-colors"
+              title="Pending Invoice Requests"
+            >
+              <Bell className="w-4 h-4 text-slate-600" />
+              {pendingCount > 0 && (
+                <span className="absolute -top-1 -right-1 inline-flex items-center justify-center w-5 h-5 text-xs font-bold bg-red-500 text-white rounded-full animate-pulse">
+                  {pendingCount}
+                </span>
+              )}
+            </button>
 
-             <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs">
-                CT
-             </div>
+            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs">
+              CT
+            </div>
           </div>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-12">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-10">
+
         {/* Welcome Section */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 animate-in fade-in-up">
           <div>
             <h2 className="text-3xl font-bold font-display text-foreground">Dashboard Overview</h2>
             <p className="text-muted-foreground mt-2">Welcome back. Here's what's happening today.</p>
           </div>
-          
           <div className="flex items-center gap-2">
             <Calendar className="w-4 h-4 text-muted-foreground" />
             <Select value={selectedMonth} onValueChange={setSelectedMonth}>
@@ -158,33 +195,7 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Pending Requests Banner */}
-        {pendingCount > 0 && (
-          <div
-            onClick={() => setLocation("/invoices?tab=pending")}
-            className="cursor-pointer flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-xl px-5 py-4 hover:bg-amber-100 transition-colors"
-          >
-            <div className="relative shrink-0">
-              <Bell className="w-5 h-5 text-amber-600" />
-              <span className="absolute -top-1.5 -right-1.5 inline-flex items-center justify-center w-4 h-4 text-[10px] font-bold bg-red-500 text-white rounded-full">
-                {pendingCount}
-              </span>
-            </div>
-            <div className="flex-1">
-              <p className="font-semibold text-amber-900 text-sm">
-                {pendingCount} Pending Invoice Request{pendingCount > 1 ? "s" : ""}
-              </p>
-              <p className="text-amber-700 text-xs mt-0.5">
-                New requests from package.curvetechsolution.online are waiting for your review
-              </p>
-            </div>
-            <span className="text-xs font-medium text-amber-700 bg-amber-200 px-3 py-1 rounded-full shrink-0">
-              Review Now →
-            </span>
-          </div>
-        )}
-
-        {/* Stats Grid */}
+        {/* ── STATS GRID ─────────────────────────────────────────── */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           <StatCard
             title="Total Sales"
@@ -217,16 +228,126 @@ export default function Home() {
           />
         </div>
 
-        {/* Action Buttons */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
-          <ActionButton onClick={handleCreateInvoice} icon={<Plus className="w-8 h-8" />}>
+        {/* ── PENDING INVOICE REQUESTS (Always Visible) ──────────── */}
+        <Card className="border-amber-200 dark:border-amber-800">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Bell className="h-4 w-4 text-amber-500" />
+                Pending Invoice Requests
+                {pendingCount > 0 && (
+                  <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-bold bg-red-500 text-white rounded-full animate-pulse">
+                    {pendingCount}
+                  </span>
+                )}
+              </CardTitle>
+              <button
+                onClick={() => refetchRequests()}
+                className="text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded hover:bg-muted"
+              >
+                ↻ Refresh
+              </button>
+            </div>
+            <CardDescription>
+              Requests from package.curvetechsolution.online — accept to auto-generate invoice or decline to dismiss
+            </CardDescription>
+          </CardHeader>
+
+          <CardContent>
+            {pendingCount === 0 && (
+              <div className="text-center py-10 bg-amber-50 dark:bg-amber-950/20 rounded-lg border border-dashed border-amber-200 dark:border-amber-800">
+                <Clock className="h-10 w-10 mx-auto mb-3 opacity-30 text-amber-400" />
+                <p className="text-sm font-medium text-muted-foreground">No pending requests</p>
+                <p className="text-xs mt-1 text-muted-foreground opacity-70">
+                  New requests from your package site will appear here in real time
+                </p>
+              </div>
+            )}
+
+            {pendingCount > 0 && (
+              <div className="space-y-3">
+                {pendingRequests.map(req => (
+                  <div
+                    key={req.id}
+                    className="flex items-start justify-between gap-4 bg-amber-50 dark:bg-amber-950/30 border border-amber-100 dark:border-amber-800 rounded-xl p-4 hover:border-amber-300 transition-colors"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap mb-1">
+                        <p className="font-semibold text-sm">{req.clientName}</p>
+                        <Badge className="bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200 text-xs px-2 py-0">
+                          pending
+                        </Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground">{req.clientEmail}</p>
+                      {req.clientPhone && (
+                        <p className="text-xs text-muted-foreground">{req.clientPhone}</p>
+                      )}
+                      <p className="text-xs font-semibold text-primary mt-1">{req.serviceName}</p>
+                      <div className="flex items-center gap-3 mt-1 flex-wrap">
+                        {req.price && (
+                          <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                            💰 {req.price}
+                          </span>
+                        )}
+                      </div>
+                      {req.message && (
+                        <p className="text-xs text-muted-foreground mt-1 italic">"{req.message}"</p>
+                      )}
+                      <p className="text-xs text-muted-foreground mt-1.5">
+                        🕐 {req.createdAt
+                          ? format(new Date(req.createdAt), "MMM d, yyyy · h:mm a")
+                          : "—"
+                        }
+                      </p>
+                    </div>
+
+                    <div className="flex flex-col gap-2 shrink-0">
+                      <Button
+                        size="sm"
+                        className="h-8 text-xs gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white"
+                        disabled={actionLoading !== null}
+                        onClick={() => handleAccept(req)}
+                      >
+                        {actionLoading === `accept-${req.id}`
+                          ? <Loader2 className="h-3 w-3 animate-spin" />
+                          : <CheckCircle className="h-3 w-3" />
+                        }
+                        Accept
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-8 text-xs gap-1.5 text-red-600 border-red-300 hover:bg-red-50 dark:hover:bg-red-950"
+                        disabled={actionLoading !== null}
+                        onClick={() => handleDecline(req)}
+                      >
+                        {actionLoading === `decline-${req.id}`
+                          ? <Loader2 className="h-3 w-3 animate-spin" />
+                          : <XCircle className="h-3 w-3" />
+                        }
+                        Decline
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* ── ACTION BUTTONS ─────────────────────────────────────── */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <ActionButton onClick={() => setLocation("/invoices/new")} icon={<Plus className="w-8 h-8" />}>
             Create New Invoice
           </ActionButton>
-          
-          <ActionButton onClick={handleCreateQuote} icon={<FileText className="w-8 h-8" />}>
+          <ActionButton
+            onClick={() => toast({ title: "Coming Soon", description: "Quote creation will be available in the next update." })}
+            icon={<FileText className="w-8 h-8" />}
+          >
             Create New Quote
           </ActionButton>
         </div>
+
       </main>
     </div>
   );
