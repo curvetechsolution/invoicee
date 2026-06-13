@@ -98,9 +98,69 @@ export default function Home() {
   const handleAccept = async (req: InvoiceRequest) => {
     setActionLoading(`accept-${req.id}`);
     try {
+      // 1. Get the next invoice number from our backend
+      const nextNumRes = await apiRequest("GET", "/api/invoices/next-number");
+      const { nextNumber } = await nextNumRes.json();
+
+      const priceNum = parseFloat(String(req.price || "0")) || 0;
+
+      // 2. Build the invoice payload exactly like the manual "Save Invoice" form does
+      const invoicePayload = {
+        invoice: {
+          invoiceNumber: nextNumber,
+          currency: "USD",
+          issueDate: new Date(),
+          dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+          clientName: req.clientName,
+          clientEmail: req.clientEmail,
+          clientPhone: req.clientPhone || "",
+          subtotal: priceNum.toFixed(2),
+          subtotalDiscountValue: "0",
+          subtotalDiscountType: "fixed",
+          taxValue: "0",
+          taxType: "fixed",
+          totalAmount: priceNum.toFixed(2),
+          depositType: "fixed",
+          depositValue: "0",
+          depositRequested: "0",
+          payableAfterDeposit: priceNum.toFixed(2),
+          paidAmount: "0",
+          payableAmount: priceNum.toFixed(2),
+          description: req.message || "",
+          status: "Unpaid",
+        },
+        items: [{
+          title: req.serviceName,
+          description: req.message || "",
+          price: priceNum.toFixed(2),
+          discountValue: "0",
+          discountType: "fixed",
+          total: priceNum.toFixed(2),
+        }],
+      };
+
+      // 3. Create the invoice in our database, same as manual creation
+      const createRes = await apiRequest("POST", "/api/invoices", invoicePayload);
+      const createdInvoice = await createRes.json();
+
+      // 4. Mark the request as accepted in Supabase
       await updateSupabaseStatus(String(req.id), "accepted");
+
+      // 5. Refresh dashboard + invoice lists
       queryClient.invalidateQueries({ queryKey: ["supabase-invoice-requests"] });
-      toast({ title: "✅ Request Accepted", description: `Request from ${req.clientName} accepted.` });
+      queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/invoices/next-number"] });
+
+      toast({
+        title: "✅ Invoice Generated",
+        description: `Invoice #${nextNumber} created for ${req.clientName}.`,
+      });
+
+      // 6. Take the user straight to the new invoice
+      if (createdInvoice?.id) {
+        setLocation(`/invoices/${createdInvoice.id}/preview`);
+      }
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
     } finally {
@@ -281,7 +341,7 @@ export default function Home() {
               </button>
             </div>
             <CardDescription>
-              Requests from package.curvetechsolution.online — accept to auto-generate invoice or decline to dismiss
+              Requests from package.curvetechsolution.online — accept to instantly generate and open the invoice, or decline to dismiss
             </CardDescription>
           </CardHeader>
 
