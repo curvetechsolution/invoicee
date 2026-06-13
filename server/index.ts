@@ -9,12 +9,29 @@ const httpServer = createServer(app);
 
 // Allow requests from external domains (e.g. package.curvetechsolution.online)
 app.use(cors({
-  origin: true,
+  origin: [
+    "https://package.curvetechsolution.online",
+    "https://invoice.curvetechsolution.online",
+    "https://curvetechsolution.online",
+    "http://localhost:5173",
+    "http://localhost:3000",
+  ],
   methods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,
 }));
-app.options("*", cors());
+app.options("*", cors({
+  origin: [
+    "https://package.curvetechsolution.online",
+    "https://invoice.curvetechsolution.online",
+    "https://curvetechsolution.online",
+    "http://localhost:5173",
+    "http://localhost:3000",
+  ],
+  methods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true,
+}));
 
 declare module "http" {
   interface IncomingMessage {
