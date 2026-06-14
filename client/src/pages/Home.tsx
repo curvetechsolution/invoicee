@@ -8,9 +8,25 @@ import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useQuery } from "@tanstack/react-query";
-import { type InvoiceRequest } from "@shared/schema";
 
+// ── Supabase Config (same project/table as InvoiceList's Pending tab) ──
+const SUPABASE_URL = "https://dbyrmttpkeftcgcdneas.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRieXJtdHRwa2VmdGNnY2RuZWFzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA3NTY1NzcsImV4cCI6MjA5NjMzMjU3N30.ipTjwyyRakLK8Ac9n7TXh-5bQp3tXlOsktcs6bE5mxI";
+const SUPABASE_HEADERS = {
+  "Content-Type": "application/json",
+  "apikey": SUPABASE_KEY,
+  "Authorization": `Bearer ${SUPABASE_KEY}`,
+};
 
+async function fetchSupabasePendingCount(): Promise<number> {
+  const res = await fetch(
+    `${SUPABASE_URL}/rest/v1/invoice_requests?status=eq.pending&select=id`,
+    { headers: SUPABASE_HEADERS }
+  );
+  if (!res.ok) return 0;
+  const data = await res.json();
+  return Array.isArray(data) ? data.length : 0;
+}
 
 const CURRENCIES = [
   { code: "USD", symbol: "$" },
@@ -37,12 +53,12 @@ export default function Home() {
   );
   const { toast } = useToast();
 
-  // Pending count — from local API (for bell icon only)
-  const { data: allRequests = [] } = useQuery<InvoiceRequest[]>({
-    queryKey: ["/api/invoice-requests"],
-    refetchInterval: 30000,
+  // Pending count — from Supabase (same source as the Pending Requests tab)
+  const { data: pendingCount = 0 } = useQuery<number>({
+    queryKey: ["supabase-pending-count"],
+    queryFn: fetchSupabasePendingCount,
+    refetchInterval: 15000,
   });
-  const pendingCount = allRequests.filter((r: InvoiceRequest) => r.status === "pending").length;
 
   const formatCurrency = (val?: number) => {
     return new Intl.NumberFormat('en-US', {
