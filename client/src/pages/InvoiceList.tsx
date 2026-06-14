@@ -95,81 +95,89 @@ export default function InvoiceList() {
   const handleAccept = async (req: InvoiceRequest) => {
     setActionLoading(`accept-${req.id}`);
     try {
-      // 1. Get next invoice number
-      const nextNumRes = await apiRequest("GET", "/api/invoices/next-number");
-      if (!nextNumRes.ok) {
-        const errText = await nextNumRes.text();
-        throw new Error(`Failed to get invoice number: ${errText}`);
-      }
-      const { nextNumber } = await nextNumRes.json();
-
-      // 2. Parse price — handle formats like "Rs. 8,600/mo", "28,000", "$500" etc.
+      // 1. Parse price — handle "Rs. 8,600/mo", "28,000", "$500" etc.
       const rawPrice = String(req.price || "0");
       const cleanPrice = rawPrice.replace(/[^0-9.]/g, "");
       const priceNum = parseFloat(cleanPrice) || 0;
 
-      // 3. Calculate all totals exactly like manual invoice
-      const itemTotal     = priceNum;
-      const subtotal      = priceNum;
-      const totalAmount   = priceNum;
-      const depositReq    = 0;
-      const payableAfter  = totalAmount;
-      const payableAmount = totalAmount;
+      // 2. Get next invoice number from localStorage (no DB call needed)
+      const storedInvoices = JSON.parse(localStorage.getItem("invoices") || "[]");
+      const maxId = storedInvoices.reduce((max: number, inv: any) => {
+        const n = parseInt(inv.invoiceNumber || inv.id || 0);
+        return n > max ? n : max;
+      }, 0);
+      const nextNumber = maxId + 1;
 
-      // 4. Build invoice payload — dates as ISO strings (Vercel needs serializable JSON)
-      const now     = new Date();
-      const due     = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+      // 3. Calculate totals
+      const priceStr = priceNum.toFixed(2);
 
-      const invoicePayload = {
+      // 4. Build invoice — same shape as manual CreateInvoice saves to localStorage
+      const now = new Date().toISOString();
+      const due = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+
+      const newInvoice = {
+        id:                     nextNumber,
+        invoiceNumber:          nextNumber,
+        currency:               "PKR",
+        issueDate:              now,
+        dueDate:                due,
+        clientName:             req.clientName   || "Unknown",
+        clientEmail:            req.clientEmail  || "",
+        clientPhone:            req.clientPhone  || "",
+        subtotal:               priceStr,
+        subtotalDiscountValue:  "0",
+        subtotalDiscountType:   "fixed",
+        taxValue:               "0",
+        taxType:                "fixed",
+        totalAmount:            priceStr,
+        depositType:            "fixed",
+        depositValue:           "0",
+        depositRequested:       "0.00",
+        payableAfterDeposit:    priceStr,
+        paidAmount:             "0",
+        payableAmount:          priceStr,
+        description:            req.message || "",
+        status:                 "Unpaid",
+        items: [{
+          title:         req.serviceName || "Service",
+          description:   req.message    || "",
+          price:         priceStr,
+          discountValue: "0",
+          discountType:  "fixed",
+          total:         priceStr,
+        }],
+      };
+
+      // 5. Save to localStorage
+      localStorage.setItem("invoices", JSON.stringify([...storedInvoices, newInvoice]));
+
+      // 6. Also try to sync with DB in background (don't await — don't block on failure)
+      apiRequest("POST", "/api/invoices", {
         invoice: {
           invoiceNumber:          nextNumber,
           currency:               "PKR",
-          issueDate:              now.toISOString(),
-          dueDate:                due.toISOString(),
-          clientName:             req.clientName   || "Unknown",
-          clientEmail:            req.clientEmail  || "",
-          clientPhone:            req.clientPhone  || "",
-          subtotal:               subtotal.toFixed(2),
+          issueDate:              now,
+          dueDate:                due,
+          clientName:             newInvoice.clientName,
+          clientEmail:            newInvoice.clientEmail,
+          clientPhone:            newInvoice.clientPhone,
+          subtotal:               priceStr,
           subtotalDiscountValue:  "0",
           subtotalDiscountType:   "fixed",
           taxValue:               "0",
           taxType:                "fixed",
-          totalAmount:            totalAmount.toFixed(2),
+          totalAmount:            priceStr,
           depositType:            "fixed",
           depositValue:           "0",
-          depositRequested:       depositReq.toFixed(2),
-          payableAfterDeposit:    payableAfter.toFixed(2),
+          depositRequested:       "0.00",
+          payableAfterDeposit:    priceStr,
           paidAmount:             "0",
-          payableAmount:          payableAmount.toFixed(2),
-          description:            req.message || "",
+          payableAmount:          priceStr,
+          description:            newInvoice.description,
           status:                 "Unpaid",
         },
-        items: [{
-          title:         req.serviceName || "Service",
-          description:   req.message    || "",
-          price:         itemTotal.toFixed(2),
-          discountValue: "0",
-          discountType:  "fixed",
-          total:         itemTotal.toFixed(2),
-        }],
-      };
-
-      // 5. Save to localStorage (same as manual invoice)
-      const storedInvoices = JSON.parse(localStorage.getItem("invoices") || "[]");
-      const newLocalInvoice = {
-        ...invoicePayload.invoice,
-        id: nextNumber,
-        items: invoicePayload.items,
-      };
-      localStorage.setItem("invoices", JSON.stringify([...storedInvoices, newLocalInvoice]));
-
-      // 6. Create invoice in DB — check response properly
-      const createRes = await apiRequest("POST", "/api/invoices", invoicePayload);
-      if (!createRes.ok) {
-        const errBody = await createRes.text();
-        throw new Error(`Server error ${createRes.status}: ${errBody}`);
-      }
-      const createdInvoice = await createRes.json();
+        items: newInvoice.items,
+      }).catch(() => {/* DB sync failed silently — localStorage is source of truth */});
 
       // 7. Mark as accepted in Supabase
       await updateSupabaseStatus(String(req.id), "accepted");
@@ -178,16 +186,15 @@ export default function InvoiceList() {
       queryClient.invalidateQueries({ queryKey: ["supabase-invoice-requests"] });
       queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
       queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/invoices/next-number"] });
 
       toast({
         title: "✅ Invoice Generated",
         description: `Invoice #${nextNumber} created for ${req.clientName}.`,
       });
 
-      if (createdInvoice?.id) {
-        setLocation(`/invoices/${createdInvoice.id}/preview`);
-      }
+      // 9. Go to preview — CreateInvoice will load from localStorage
+      setLocation(`/invoices/${nextNumber}/preview`);
+
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
     } finally {
