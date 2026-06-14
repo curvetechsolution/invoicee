@@ -97,31 +97,38 @@ export default function InvoiceList() {
     try {
       // 1. Get next invoice number
       const nextNumRes = await apiRequest("GET", "/api/invoices/next-number");
+      if (!nextNumRes.ok) {
+        const errText = await nextNumRes.text();
+        throw new Error(`Failed to get invoice number: ${errText}`);
+      }
       const { nextNumber } = await nextNumRes.json();
 
-      // 2. Parse price — handle formats like "Rs. 8,600/mo", "28000", "$500" etc.
+      // 2. Parse price — handle formats like "Rs. 8,600/mo", "28,000", "$500" etc.
       const rawPrice = String(req.price || "0");
-      const cleanPrice = rawPrice.replace(/[^0-9.]/g, ""); // strip everything except digits and dot
+      const cleanPrice = rawPrice.replace(/[^0-9.]/g, "");
       const priceNum = parseFloat(cleanPrice) || 0;
 
-      // 3. Calculate all totals exactly like manual invoice (no discount, no tax by default)
-      const itemTotal     = priceNum;          // item price - item discount (0)
-      const subtotal      = priceNum;          // sum of all item totals
-      const totalAmount   = priceNum;          // subtotal - subtotal discount (0) + tax (0)
-      const depositReq    = 0;                 // no deposit
-      const payableAfter  = totalAmount;       // totalAmount - depositRequested
-      const payableAmount = totalAmount;       // totalAmount - paidAmount (0)
+      // 3. Calculate all totals exactly like manual invoice
+      const itemTotal     = priceNum;
+      const subtotal      = priceNum;
+      const totalAmount   = priceNum;
+      const depositReq    = 0;
+      const payableAfter  = totalAmount;
+      const payableAmount = totalAmount;
 
-      // 4. Build invoice payload — same structure as manual CreateInvoice form
+      // 4. Build invoice payload — dates as ISO strings (Vercel needs serializable JSON)
+      const now     = new Date();
+      const due     = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+
       const invoicePayload = {
         invoice: {
           invoiceNumber:          nextNumber,
           currency:               "PKR",
-          issueDate:              new Date(),
-          dueDate:                new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-          clientName:             req.clientName,
-          clientEmail:            req.clientEmail,
-          clientPhone:            req.clientPhone || "",
+          issueDate:              now.toISOString(),
+          dueDate:                due.toISOString(),
+          clientName:             req.clientName   || "Unknown",
+          clientEmail:            req.clientEmail  || "",
+          clientPhone:            req.clientPhone  || "",
           subtotal:               subtotal.toFixed(2),
           subtotalDiscountValue:  "0",
           subtotalDiscountType:   "fixed",
@@ -138,8 +145,8 @@ export default function InvoiceList() {
           status:                 "Unpaid",
         },
         items: [{
-          title:         req.serviceName,
-          description:   req.message || "",
+          title:         req.serviceName || "Service",
+          description:   req.message    || "",
           price:         itemTotal.toFixed(2),
           discountValue: "0",
           discountType:  "fixed",
@@ -147,7 +154,7 @@ export default function InvoiceList() {
         }],
       };
 
-      // 5. Also save to localStorage (same as manual invoice does)
+      // 5. Save to localStorage (same as manual invoice)
       const storedInvoices = JSON.parse(localStorage.getItem("invoices") || "[]");
       const newLocalInvoice = {
         ...invoicePayload.invoice,
@@ -156,8 +163,12 @@ export default function InvoiceList() {
       };
       localStorage.setItem("invoices", JSON.stringify([...storedInvoices, newLocalInvoice]));
 
-      // 6. Create invoice in DB
+      // 6. Create invoice in DB — check response properly
       const createRes = await apiRequest("POST", "/api/invoices", invoicePayload);
+      if (!createRes.ok) {
+        const errBody = await createRes.text();
+        throw new Error(`Server error ${createRes.status}: ${errBody}`);
+      }
       const createdInvoice = await createRes.json();
 
       // 7. Mark as accepted in Supabase
