@@ -2,59 +2,13 @@ import { useState } from "react";
 import { useDashboardStats } from "@/hooks/use-dashboard";
 import { StatCard } from "@/components/StatCard";
 import { ActionButton } from "@/components/ActionButton";
-import { DollarSign, FileText, Receipt, Send, Plus, Calendar, Bell, CheckCircle, XCircle, Loader2, Clock } from "lucide-react";
+import { DollarSign, FileText, Receipt, Send, Plus, Calendar, Bell } from "lucide-react";
 import logoImg from "@assets/Curve_Tech_Solution_Logo_1767002702612.png";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { type InvoiceRequest } from "@shared/schema";
-import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { format } from "date-fns";
-
-// ── Supabase Config ───────────────────────────────────────────────
-const SUPABASE_URL = "https://dbyrmttpkeftcgcdneas.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRieXJtdHRwa2VmdGNnY2RuZWFzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA3NTY1NzcsImV4cCI6MjA5NjMzMjU3N30.ipTjwyyRakLK8Ac9n7TXh-5bQp3tXlOsktcs6bE5mxI";
-const SUPABASE_HEADERS = {
-  "Content-Type": "application/json",
-  "apikey": SUPABASE_KEY,
-  "Authorization": `Bearer ${SUPABASE_KEY}`,
-};
-
-async function fetchSupabaseRequests(): Promise<InvoiceRequest[]> {
-  const res = await fetch(
-    `${SUPABASE_URL}/rest/v1/invoice_requests?status=eq.pending&order=created_at.desc`,
-    { headers: SUPABASE_HEADERS }
-  );
-  if (!res.ok) throw new Error("Supabase fetch failed");
-  const data = await res.json();
-  return data.map((r: any) => ({
-    id: r.id,
-    clientName:  r.client_name  || "",
-    clientEmail: r.client_email || "",
-    clientPhone: r.client_phone || "",
-    serviceName: r.service_name || "",
-    price:       r.price        || "",
-    message:     r.message      || "",
-    status:      r.status       || "pending",
-    createdAt:   r.created_at   ? new Date(r.created_at) : new Date(),
-  }));
-}
-
-async function updateSupabaseStatus(id: string, status: string) {
-  const res = await fetch(
-    `${SUPABASE_URL}/rest/v1/invoice_requests?id=eq.${id}`,
-    {
-      method: "PATCH",
-      headers: { ...SUPABASE_HEADERS, "Prefer": "return=minimal" },
-      body: JSON.stringify({ status }),
-    }
-  );
-  if (!res.ok) throw new Error("Supabase update failed");
-}
 
 
 
@@ -75,7 +29,6 @@ export default function Home() {
   const [selectedCurrency, setSelectedCurrency] = useState(CURRENCIES[0]);
   const [selectedMonth, setSelectedMonth] = useState<string>("-1");
   const [selectedYear, setSelectedYear] = useState<string>(new Date().getFullYear().toString());
-  const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   const { data: stats, isLoading } = useDashboardStats(
     parseInt(selectedMonth),
@@ -84,103 +37,12 @@ export default function Home() {
   );
   const { toast } = useToast();
 
-  // Pending invoice requests — from Supabase
-  const { data: allRequests = [], refetch: refetchRequests } = useQuery<InvoiceRequest[]>({
-    queryKey: ["supabase-invoice-requests"],
-    queryFn: fetchSupabaseRequests,
+  // Pending count — from local API (for bell icon only)
+  const { data: allRequests = [] } = useQuery<InvoiceRequest[]>({
+    queryKey: ["/api/invoice-requests"],
     refetchInterval: 30000,
   });
-
-  const pendingRequests = allRequests.filter(r => r.status === "pending");
-  const pendingCount = pendingRequests.length;
-
-  // ── Accept ──────────────────────────────────────────────────────
-  const handleAccept = async (req: InvoiceRequest) => {
-    setActionLoading(`accept-${req.id}`);
-    try {
-      // 1. Get the next invoice number from our backend
-      const nextNumRes = await apiRequest("GET", "/api/invoices/next-number");
-      const { nextNumber } = await nextNumRes.json();
-
-      const priceNum = parseFloat(String(req.price || "0")) || 0;
-
-      // 2. Build the invoice payload exactly like the manual "Save Invoice" form does
-      const invoicePayload = {
-        invoice: {
-          invoiceNumber: nextNumber,
-          currency: "USD",
-          issueDate: new Date(),
-          dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-          clientName: req.clientName,
-          clientEmail: req.clientEmail,
-          clientPhone: req.clientPhone || "",
-          subtotal: priceNum.toFixed(2),
-          subtotalDiscountValue: "0",
-          subtotalDiscountType: "fixed",
-          taxValue: "0",
-          taxType: "fixed",
-          totalAmount: priceNum.toFixed(2),
-          depositType: "fixed",
-          depositValue: "0",
-          depositRequested: "0",
-          payableAfterDeposit: priceNum.toFixed(2),
-          paidAmount: "0",
-          payableAmount: priceNum.toFixed(2),
-          description: req.message || "",
-          status: "Unpaid",
-        },
-        items: [{
-          title: req.serviceName,
-          description: req.message || "",
-          price: priceNum.toFixed(2),
-          discountValue: "0",
-          discountType: "fixed",
-          total: priceNum.toFixed(2),
-        }],
-      };
-
-      // 3. Create the invoice in our database, same as manual creation
-      const createRes = await apiRequest("POST", "/api/invoices", invoicePayload);
-      const createdInvoice = await createRes.json();
-
-      // 4. Mark the request as accepted in Supabase
-      await updateSupabaseStatus(String(req.id), "accepted");
-
-      // 5. Refresh dashboard + invoice lists
-      queryClient.invalidateQueries({ queryKey: ["supabase-invoice-requests"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/invoices/next-number"] });
-
-      toast({
-        title: "✅ Invoice Generated",
-        description: `Invoice #${nextNumber} created for ${req.clientName}.`,
-      });
-
-      // 6. Take the user straight to the new invoice
-      if (createdInvoice?.id) {
-        setLocation(`/invoices/${createdInvoice.id}/preview`);
-      }
-    } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
-    } finally {
-      setActionLoading(null);
-    }
-  };
-
-  // ── Decline ─────────────────────────────────────────────────────
-  const handleDecline = async (req: InvoiceRequest) => {
-    setActionLoading(`decline-${req.id}`);
-    try {
-      await updateSupabaseStatus(String(req.id), "declined");
-      queryClient.invalidateQueries({ queryKey: ["supabase-invoice-requests"] });
-      toast({ title: "Request Declined", description: `Request from ${req.clientName} declined.` });
-    } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
-    } finally {
-      setActionLoading(null);
-    }
-  };
+  const pendingCount = allRequests.filter((r: InvoiceRequest) => r.status === "pending").length;
 
   const formatCurrency = (val?: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -319,113 +181,6 @@ export default function Home() {
             className="border-l-4 border-l-purple-500"
           />
         </div>
-
-        {/* ── PENDING INVOICE REQUESTS (Always Visible) ──────────── */}
-        <Card className="border-amber-200 dark:border-amber-800">
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between flex-wrap gap-2">
-              <CardTitle className="text-base flex items-center gap-2">
-                <Bell className="h-4 w-4 text-amber-500" />
-                Pending Invoice Requests
-                {pendingCount > 0 && (
-                  <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-bold bg-red-500 text-white rounded-full animate-pulse">
-                    {pendingCount}
-                  </span>
-                )}
-              </CardTitle>
-              <button
-                onClick={() => refetchRequests()}
-                className="text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded hover:bg-muted"
-              >
-                ↻ Refresh
-              </button>
-            </div>
-            <CardDescription>
-              Requests from package.curvetechsolution.online — accept to instantly generate and open the invoice, or decline to dismiss
-            </CardDescription>
-          </CardHeader>
-
-          <CardContent>
-            {pendingCount === 0 && (
-              <div className="text-center py-10 bg-amber-50 dark:bg-amber-950/20 rounded-lg border border-dashed border-amber-200 dark:border-amber-800">
-                <Clock className="h-10 w-10 mx-auto mb-3 opacity-30 text-amber-400" />
-                <p className="text-sm font-medium text-muted-foreground">No pending requests</p>
-                <p className="text-xs mt-1 text-muted-foreground opacity-70">
-                  New requests from your package site will appear here in real time
-                </p>
-              </div>
-            )}
-
-            {pendingCount > 0 && (
-              <div className="space-y-3">
-                {pendingRequests.map(req => (
-                  <div
-                    key={req.id}
-                    className="flex items-start justify-between gap-4 bg-amber-50 dark:bg-amber-950/30 border border-amber-100 dark:border-amber-800 rounded-xl p-4 hover:border-amber-300 transition-colors"
-                  >
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap mb-1">
-                        <p className="font-semibold text-sm">{req.clientName}</p>
-                        <Badge className="bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200 text-xs px-2 py-0">
-                          pending
-                        </Badge>
-                      </div>
-                      <p className="text-xs text-muted-foreground">{req.clientEmail}</p>
-                      {req.clientPhone && (
-                        <p className="text-xs text-muted-foreground">{req.clientPhone}</p>
-                      )}
-                      <p className="text-xs font-semibold text-primary mt-1">{req.serviceName}</p>
-                      <div className="flex items-center gap-3 mt-1 flex-wrap">
-                        {req.price && (
-                          <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">
-                            💰 {req.price}
-                          </span>
-                        )}
-                      </div>
-                      {req.message && (
-                        <p className="text-xs text-muted-foreground mt-1 italic">"{req.message}"</p>
-                      )}
-                      <p className="text-xs text-muted-foreground mt-1.5">
-                        🕐 {req.createdAt
-                          ? format(new Date(req.createdAt), "MMM d, yyyy · h:mm a")
-                          : "—"
-                        }
-                      </p>
-                    </div>
-
-                    <div className="flex flex-col gap-2 shrink-0">
-                      <Button
-                        size="sm"
-                        className="h-8 text-xs gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white"
-                        disabled={actionLoading !== null}
-                        onClick={() => handleAccept(req)}
-                      >
-                        {actionLoading === `accept-${req.id}`
-                          ? <Loader2 className="h-3 w-3 animate-spin" />
-                          : <CheckCircle className="h-3 w-3" />
-                        }
-                        Accept
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="h-8 text-xs gap-1.5 text-red-600 border-red-300 hover:bg-red-50 dark:hover:bg-red-950"
-                        disabled={actionLoading !== null}
-                        onClick={() => handleDecline(req)}
-                      >
-                        {actionLoading === `decline-${req.id}`
-                          ? <Loader2 className="h-3 w-3 animate-spin" />
-                          : <XCircle className="h-3 w-3" />
-                        }
-                        Decline
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
 
         {/* ── ACTION BUTTONS ─────────────────────────────────────── */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
