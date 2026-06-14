@@ -49,11 +49,16 @@ export async function registerRoutes(
       console.error("Error creating invoice:", err);
       if (err instanceof z.ZodError) {
         return res.status(400).json({
-          message: err.errors[0].message,
-          field: err.errors[0].path.join('.'),
+          message: err.errors.map(e => `${e.path.join('.')}: ${e.message}`).join(', '),
+          errors: err.errors,
         });
       }
-      res.status(500).json({ message: "Internal server error", error: String(err) });
+      // Postgres unique constraint violation (duplicate invoice number)
+      const pgErr = err as any;
+      if (pgErr?.code === '23505') {
+        return res.status(409).json({ message: "Invoice number already exists. Please try again." });
+      }
+      res.status(500).json({ message: String(err) });
     }
   });
 
