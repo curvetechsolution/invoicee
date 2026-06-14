@@ -99,51 +99,71 @@ export default function InvoiceList() {
       const nextNumRes = await apiRequest("GET", "/api/invoices/next-number");
       const { nextNumber } = await nextNumRes.json();
 
-      const priceNum = parseFloat(String(req.price || "0")) || 0;
+      // 2. Parse price — handle formats like "Rs. 8,600/mo", "28000", "$500" etc.
+      const rawPrice = String(req.price || "0");
+      const cleanPrice = rawPrice.replace(/[^0-9.]/g, ""); // strip everything except digits and dot
+      const priceNum = parseFloat(cleanPrice) || 0;
 
-      // 2. Build invoice payload
+      // 3. Calculate all totals exactly like manual invoice (no discount, no tax by default)
+      const itemTotal     = priceNum;          // item price - item discount (0)
+      const subtotal      = priceNum;          // sum of all item totals
+      const totalAmount   = priceNum;          // subtotal - subtotal discount (0) + tax (0)
+      const depositReq    = 0;                 // no deposit
+      const payableAfter  = totalAmount;       // totalAmount - depositRequested
+      const payableAmount = totalAmount;       // totalAmount - paidAmount (0)
+
+      // 4. Build invoice payload — same structure as manual CreateInvoice form
       const invoicePayload = {
         invoice: {
-          invoiceNumber: nextNumber,
-          currency: "USD",
-          issueDate: new Date(),
-          dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-          clientName: req.clientName,
-          clientEmail: req.clientEmail,
-          clientPhone: req.clientPhone || "",
-          subtotal: priceNum.toFixed(2),
-          subtotalDiscountValue: "0",
-          subtotalDiscountType: "fixed",
-          taxValue: "0",
-          taxType: "fixed",
-          totalAmount: priceNum.toFixed(2),
-          depositType: "fixed",
-          depositValue: "0",
-          depositRequested: "0",
-          payableAfterDeposit: priceNum.toFixed(2),
-          paidAmount: "0",
-          payableAmount: priceNum.toFixed(2),
-          description: req.message || "",
-          status: "Unpaid",
+          invoiceNumber:          nextNumber,
+          currency:               "PKR",
+          issueDate:              new Date(),
+          dueDate:                new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+          clientName:             req.clientName,
+          clientEmail:            req.clientEmail,
+          clientPhone:            req.clientPhone || "",
+          subtotal:               subtotal.toFixed(2),
+          subtotalDiscountValue:  "0",
+          subtotalDiscountType:   "fixed",
+          taxValue:               "0",
+          taxType:                "fixed",
+          totalAmount:            totalAmount.toFixed(2),
+          depositType:            "fixed",
+          depositValue:           "0",
+          depositRequested:       depositReq.toFixed(2),
+          payableAfterDeposit:    payableAfter.toFixed(2),
+          paidAmount:             "0",
+          payableAmount:          payableAmount.toFixed(2),
+          description:            req.message || "",
+          status:                 "Unpaid",
         },
         items: [{
-          title: req.serviceName,
-          description: req.message || "",
-          price: priceNum.toFixed(2),
+          title:         req.serviceName,
+          description:   req.message || "",
+          price:         itemTotal.toFixed(2),
           discountValue: "0",
-          discountType: "fixed",
-          total: priceNum.toFixed(2),
+          discountType:  "fixed",
+          total:         itemTotal.toFixed(2),
         }],
       };
 
-      // 3. Create invoice in DB
+      // 5. Also save to localStorage (same as manual invoice does)
+      const storedInvoices = JSON.parse(localStorage.getItem("invoices") || "[]");
+      const newLocalInvoice = {
+        ...invoicePayload.invoice,
+        id: nextNumber,
+        items: invoicePayload.items,
+      };
+      localStorage.setItem("invoices", JSON.stringify([...storedInvoices, newLocalInvoice]));
+
+      // 6. Create invoice in DB
       const createRes = await apiRequest("POST", "/api/invoices", invoicePayload);
       const createdInvoice = await createRes.json();
 
-      // 4. Mark as accepted in Supabase
+      // 7. Mark as accepted in Supabase
       await updateSupabaseStatus(String(req.id), "accepted");
 
-      // 5. Refresh queries
+      // 8. Refresh queries
       queryClient.invalidateQueries({ queryKey: ["supabase-invoice-requests"] });
       queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
       queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
