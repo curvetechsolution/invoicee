@@ -11,6 +11,47 @@ import { format } from "date-fns";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
+// ── Supabase Config ───────────────────────────────────────────────
+const SUPABASE_URL = "https://dbyrmttpkeftcgcdneas.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRieXJtdHRwa2VmdGNnY2RuZWFzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA3NTY1NzcsImV4cCI6MjA5NjMzMjU3N30.ipTjwyyRakLK8Ac9n7TXh-5bQp3tXlOsktcs6bE5mxI";
+const SUPABASE_HEADERS = {
+  "Content-Type": "application/json",
+  "apikey": SUPABASE_KEY,
+  "Authorization": `Bearer ${SUPABASE_KEY}`,
+};
+
+async function fetchSupabaseRequests(): Promise<InvoiceRequest[]> {
+  const res = await fetch(
+    `${SUPABASE_URL}/rest/v1/invoice_requests?order=created_at.desc`,
+    { headers: SUPABASE_HEADERS }
+  );
+  if (!res.ok) throw new Error("Supabase fetch failed");
+  const data = await res.json();
+  return data.map((r: any) => ({
+    id: r.id,
+    clientName:  r.client_name  || "",
+    clientEmail: r.client_email || "",
+    clientPhone: r.client_phone || "",
+    serviceName: r.service_name || "",
+    price:       r.price        || "",
+    message:     r.message      || "",
+    status:      r.status       || "pending",
+    createdAt:   r.created_at   ? new Date(r.created_at) : new Date(),
+  }));
+}
+
+async function updateSupabaseStatus(id: string, status: string) {
+  const res = await fetch(
+    `${SUPABASE_URL}/rest/v1/invoice_requests?id=eq.${id}`,
+    {
+      method: "PATCH",
+      headers: { ...SUPABASE_HEADERS, "Prefer": "return=minimal" },
+      body: JSON.stringify({ status }),
+    }
+  );
+  if (!res.ok) throw new Error("Supabase update failed");
+}
+
 function cn(...inputs: any[]) {
   return inputs.filter(Boolean).join(" ");
 }
@@ -30,7 +71,8 @@ export default function InvoiceList() {
   });
 
   const { data: pendingRequests = [], isLoading: loadingPending, refetch: refetchRequests } = useQuery<InvoiceRequest[]>({
-    queryKey: ["/api/invoice-requests"],
+    queryKey: ["supabase-invoice-requests"],
+    queryFn: fetchSupabaseRequests,
     refetchInterval: 15000,
   });
 
@@ -53,20 +95,67 @@ export default function InvoiceList() {
   const handleAccept = async (req: InvoiceRequest) => {
     setActionLoading(`accept-${req.id}`);
     try {
-      const result = await apiRequest("PATCH", `/api/invoice-requests/${req.id}`, { status: "accepted" });
-      queryClient.invalidateQueries({ queryKey: ["/api/invoice-requests"] });
+      // 1. Get next invoice number
+      const nextNumRes = await apiRequest("GET", "/api/invoices/next-number");
+      const { nextNumber } = await nextNumRes.json();
+
+      const priceNum = parseFloat(String(req.price || "0")) || 0;
+
+      // 2. Build invoice payload
+      const invoicePayload = {
+        invoice: {
+          invoiceNumber: nextNumber,
+          currency: "USD",
+          issueDate: new Date(),
+          dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+          clientName: req.clientName,
+          clientEmail: req.clientEmail,
+          clientPhone: req.clientPhone || "",
+          subtotal: priceNum.toFixed(2),
+          subtotalDiscountValue: "0",
+          subtotalDiscountType: "fixed",
+          taxValue: "0",
+          taxType: "fixed",
+          totalAmount: priceNum.toFixed(2),
+          depositType: "fixed",
+          depositValue: "0",
+          depositRequested: "0",
+          payableAfterDeposit: priceNum.toFixed(2),
+          paidAmount: "0",
+          payableAmount: priceNum.toFixed(2),
+          description: req.message || "",
+          status: "Unpaid",
+        },
+        items: [{
+          title: req.serviceName,
+          description: req.message || "",
+          price: priceNum.toFixed(2),
+          discountValue: "0",
+          discountType: "fixed",
+          total: priceNum.toFixed(2),
+        }],
+      };
+
+      // 3. Create invoice in DB
+      const createRes = await apiRequest("POST", "/api/invoices", invoicePayload);
+      const createdInvoice = await createRes.json();
+
+      // 4. Mark as accepted in Supabase
+      await updateSupabaseStatus(String(req.id), "accepted");
+
+      // 5. Refresh queries
+      queryClient.invalidateQueries({ queryKey: ["supabase-invoice-requests"] });
       queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
       queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
-      
-      const data = result as any;
-      if (data?.generatedInvoiceId) {
-        toast({
-          title: "✅ Request Accepted",
-          description: `Invoice #${data.generatedInvoiceId} generated for ${req.clientName}. Opening invoice...`,
-        });
-        setTimeout(() => setLocation(`/invoices/${data.generatedInvoiceId}/preview`), 1200);
-      } else {
-        toast({ title: "Request Accepted", description: `Invoice request from ${req.clientName} accepted.` });
+      queryClient.invalidateQueries({ queryKey: ["/api/invoices/next-number"] });
+
+      toast({
+        title: "✅ Invoice Generated",
+        description: `Invoice #${nextNumber} created for ${req.clientName}.`,
+      });
+
+      if (createdInvoice?.id) {
+        setLocation(`/invoices/${createdInvoice.id}/preview`);
       }
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
@@ -78,9 +167,9 @@ export default function InvoiceList() {
   const handleDecline = async (req: InvoiceRequest) => {
     setActionLoading(`decline-${req.id}`);
     try {
-      await apiRequest("PATCH", `/api/invoice-requests/${req.id}`, { status: "declined" });
-      queryClient.invalidateQueries({ queryKey: ["/api/invoice-requests"] });
-      toast({ title: "Request Declined", description: `Invoice request from ${req.clientName} declined.` });
+      await updateSupabaseStatus(String(req.id), "declined");
+      queryClient.invalidateQueries({ queryKey: ["supabase-invoice-requests"] });
+      toast({ title: "Request Declined", description: `Request from ${req.clientName} declined.` });
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
     } finally {
