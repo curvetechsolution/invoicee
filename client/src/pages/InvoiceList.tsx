@@ -95,23 +95,24 @@ export default function InvoiceList() {
   const handleAccept = async (req: InvoiceRequest) => {
     setActionLoading(`accept-${req.id}`);
     try {
-      // 1. Parse price — handle "Rs. 8,600/mo", "28,000", "$500" etc.
+      // 1. Parse price — handle "Rs. 31,600/mo", "28,000", "$500", "31600" etc.
+      //    Strategy: remove currency symbols, spaces, slashes and anything after slash,
+      //    then remove commas, then parse as float.
       const rawPrice = String(req.price || "0");
-      const cleanPrice = rawPrice.replace(/[^0-9.]/g, "");
+      // Remove everything after "/" (e.g. "/mo", "/month")
+      const withoutSlash = rawPrice.split("/")[0];
+      // Remove all non-numeric characters except dot
+      const cleanPrice = withoutSlash.replace(/[^0-9.]/g, "");
       const priceNum = parseFloat(cleanPrice) || 0;
 
-      // 2. Get next invoice number from localStorage (no DB call needed)
-      const storedInvoices = JSON.parse(localStorage.getItem("invoices") || "[]");
-      const maxId = storedInvoices.reduce((max: number, inv: any) => {
-        const n = parseInt(inv.invoiceNumber || inv.id || 0);
-        return n > max ? n : max;
-      }, 0);
-      const nextNumber = maxId + 1;
+      // 2. Get next invoice number from DB
+      const nextNumberRes = await apiRequest("GET", "/api/invoices/next-number");
+      const { nextNumber } = await nextNumberRes.json();
 
       // 3. Calculate totals
       const priceStr = priceNum.toFixed(2);
 
-      // 4. Build invoice — same shape as manual CreateInvoice saves to localStorage
+      // 4. Build invoice
       const now = new Date().toISOString();
       const due = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
 
@@ -148,11 +149,12 @@ export default function InvoiceList() {
         }],
       };
 
-      // 5. Save to localStorage
+      // 5. Save to localStorage (for preview)
+      const storedInvoices = JSON.parse(localStorage.getItem("invoices") || "[]");
       localStorage.setItem("invoices", JSON.stringify([...storedInvoices, newInvoice]));
 
-      // 6. Also try to sync with DB in background (don't await — don't block on failure)
-      apiRequest("POST", "/api/invoices", {
+      // 6. Save to DB — await this so it shows in All Invoices list
+      await apiRequest("POST", "/api/invoices", {
         invoice: {
           invoiceNumber:          nextNumber,
           currency:               "PKR",
@@ -177,7 +179,7 @@ export default function InvoiceList() {
           status:                 "Unpaid",
         },
         items: newInvoice.items,
-      }).catch(() => {/* DB sync failed silently — localStorage is source of truth */});
+      });
 
       // 7. Mark as accepted in Supabase
       await updateSupabaseStatus(String(req.id), "accepted");
