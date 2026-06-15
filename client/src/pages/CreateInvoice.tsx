@@ -485,8 +485,11 @@ export default function CreateInvoice({ params }: { params?: { id?: string } }) 
             </div>
           </div>
           <Button 
-            type="submit" 
-            form="invoice-form"
+            type="button"
+            onClick={async () => {
+              const data = form.getValues();
+              await handleFormSubmit(data);
+            }}
             disabled={mutation.isPending} 
             className="relative z-50 pointer-events-auto"
           >
