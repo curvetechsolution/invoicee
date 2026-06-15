@@ -72,20 +72,21 @@ export default function CreateInvoice({ params }: { params?: { id?: string } }) 
 
   useEffect(() => {
     const storedInvoices = JSON.parse(localStorage.getItem("invoices") || "[]");
-    const invoiceId = params?.id ? parseInt(params.id) : null;
+    const invoiceId = params?.id ? params.id : null; // keep as string for comparison
     const isEditMode = invoiceId !== undefined && invoiceId !== null;
     
     if (isEditMode) {
-      // Load invoice from localStorage in edit mode
-      const existingInvoice = storedInvoices.find((inv: any) => inv.id === invoiceId);
+      // Find by id OR invoiceNumber — compare as strings to avoid type mismatch
+      const existingInvoice = storedInvoices.find((inv: any) =>
+        String(inv.id) === String(invoiceId) || String(inv.invoiceNumber) === String(invoiceId)
+      );
       if (existingInvoice) {
-        // Set full form state from localStorage data
         form.reset({
           invoice: existingInvoice,
-          items: existingInvoice.items.map((item: any) => ({
+          items: (existingInvoice.items || []).map((item: any) => ({
             ...item,
             price: String(item.price),
-            discountValue: String(item.discountValue),
+            discountValue: String(item.discountValue || "0"),
             total: String(item.total)
           }))
         });
@@ -249,13 +250,15 @@ export default function CreateInvoice({ params }: { params?: { id?: string } }) 
   const handleFormSubmit = async (data: FormValues) => {
     try {
       const storedInvoices = JSON.parse(localStorage.getItem("invoices") || "[]");
-      const invoiceId = params?.id ? parseInt(params.id) : null;
-      const isEditModeLocal = invoiceId !== undefined && invoiceId !== null && !isNaN(invoiceId);
+      const invoiceId = params?.id || null;
+      const isEditModeLocal = invoiceId !== undefined && invoiceId !== null && invoiceId !== "";
 
       if (isEditModeLocal) {
-        // UPDATE in localStorage immediately
+        // UPDATE in localStorage — compare as strings to avoid type mismatch
         const updatedInvoices = storedInvoices.map((inv: any) =>
-          inv.id === invoiceId ? { ...data.invoice, id: invoiceId, items: data.items } : inv
+          String(inv.id) === String(invoiceId) || String(inv.invoiceNumber) === String(invoiceId)
+            ? { ...data.invoice, id: inv.id, invoiceNumber: inv.invoiceNumber, items: data.items }
+            : inv
         );
         localStorage.setItem("invoices", JSON.stringify(updatedInvoices));
         toast({ title: "✅ Invoice Updated", description: "Your invoice has been updated successfully." });
