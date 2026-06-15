@@ -66,9 +66,17 @@ export default function InvoiceList() {
   const [activeTab, setActiveTab] = useState<"invoices" | "pending">(defaultTab);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
-  const { data: invoices, isLoading: loadingInvoices } = useQuery<Invoice[]>({
+  const { data: dbInvoices = [], isLoading: loadingInvoices } = useQuery<Invoice[]>({
     queryKey: ["/api/invoices"],
   });
+
+  // Merge DB invoices with localStorage invoices (localStorage is source of truth for accepted requests)
+  const invoices = (() => {
+    const local: Invoice[] = JSON.parse(localStorage.getItem("invoices") || "[]");
+    const dbIds = new Set(dbInvoices.map((inv: Invoice) => String(inv.invoiceNumber)));
+    const localOnly = local.filter((inv: any) => !dbIds.has(String(inv.invoiceNumber)));
+    return [...dbInvoices, ...localOnly];
+  })();
 
   const { data: pendingRequests = [], isLoading: loadingPending, refetch: refetchRequests } = useQuery<InvoiceRequest[]>({
     queryKey: ["supabase-invoice-requests"],
@@ -95,17 +103,18 @@ export default function InvoiceList() {
   const handleAccept = async (req: InvoiceRequest) => {
     setActionLoading(`accept-${req.id}`);
     try {
-      // 1. Parse price — handle "Rs. 31,600/mo", "28,000", "$500", "31600" etc.
-      //    Strategy: remove currency symbols, spaces, slashes and anything after slash,
-      //    then remove commas, then parse as float.
+      // 1. Parse price correctly
+      // Price format examples: "Rs. 23,600/mo · 5 days", "Rs. 28,000", "Rs. 8,600/mo"
       const rawPrice = String(req.price || "0");
-      // Remove everything after "/" (e.g. "/mo", "/month")
-      const withoutSlash = rawPrice.split("/")[0];
-      // Remove all non-numeric characters except dot
-      const cleanPrice = withoutSlash.replace(/[^0-9.]/g, "");
-      const priceNum = parseFloat(cleanPrice) || 0;
+      // Step 1: take only the part before "·" (delivery info)
+      const beforeDot  = rawPrice.split("·")[0];
+      // Step 2: take only part before "/" (per month info)
+      const beforeSlash = beforeDot.split("/")[0];
+      // Step 3: remove all non-numeric except dot
+      const cleanPrice  = beforeSlash.replace(/[^0-9.]/g, "");
+      const priceNum    = parseFloat(cleanPrice) || 0;
 
-      // 2. Get next invoice number from localStorage (no DB call needed)
+      // 2. Get next invoice number from localStorage
       const storedInvoicesForNum = JSON.parse(localStorage.getItem("invoices") || "[]");
       const maxNum = storedInvoicesForNum.reduce((max: number, inv: any) => {
         const n = parseInt(inv.invoiceNumber || inv.id || 0);
@@ -153,11 +162,40 @@ export default function InvoiceList() {
         }],
       };
 
-      // 5. Save to localStorage (for preview)
+      // 5. Save to localStorage (for preview + All Invoices list)
       const storedInvoices = JSON.parse(localStorage.getItem("invoices") || "[]");
       localStorage.setItem("invoices", JSON.stringify([...storedInvoices, newInvoice]));
 
-      // 6. Mark as accepted in Supabase
+      // 6. Also save to DB in background (don't block on failure)
+      apiRequest("POST", "/api/invoices", {
+        invoice: {
+          invoiceNumber:          nextNumber,
+          currency:               "PKR",
+          issueDate:              now,
+          dueDate:                due,
+          clientName:             newInvoice.clientName,
+          clientEmail:            newInvoice.clientEmail,
+          clientPhone:            newInvoice.clientPhone,
+          subtotal:               priceStr,
+          subtotalDiscountValue:  "0",
+          subtotalDiscountType:   "fixed",
+          taxValue:               "0",
+          taxType:                "fixed",
+          totalAmount:            priceStr,
+          depositType:            "fixed",
+          depositValue:           "0",
+          depositRequested:       "0.00",
+          payableAfterDeposit:    priceStr,
+          paidAmount:             "0",
+          payableAmount:          priceStr,
+          description:            newInvoice.description,
+          status:                 "Unpaid",
+        },
+        items: newInvoice.items,
+      }).catch(() => {/* DB save failed silently — localStorage is source of truth */});
+
+      // 7. Mark as accepted in Supabase
+      await updateSupabaseStatus(String(req.id), "accepted");
       await updateSupabaseStatus(String(req.id), "accepted");
 
       // 7. Refresh queries
