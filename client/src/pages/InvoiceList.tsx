@@ -285,7 +285,10 @@ export default function InvoiceList() {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => refetchRequests()}
+              onClick={async () => {
+                await refetchRequests();
+                queryClient.invalidateQueries({ queryKey: ["supabase-invoice-requests"] });
+              }}
               disabled={loadingPending}
             >
               <RefreshCw className={cn("h-4 w-4 mr-2", loadingPending && "animate-spin")} />
