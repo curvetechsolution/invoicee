@@ -105,9 +105,13 @@ export default function InvoiceList() {
       const cleanPrice = withoutSlash.replace(/[^0-9.]/g, "");
       const priceNum = parseFloat(cleanPrice) || 0;
 
-      // 2. Get next invoice number from DB
-      const nextNumberRes = await apiRequest("GET", "/api/invoices/next-number");
-      const { nextNumber } = await nextNumberRes.json();
+      // 2. Get next invoice number from localStorage (no DB call needed)
+      const storedInvoicesForNum = JSON.parse(localStorage.getItem("invoices") || "[]");
+      const maxNum = storedInvoicesForNum.reduce((max: number, inv: any) => {
+        const n = parseInt(inv.invoiceNumber || inv.id || 0);
+        return n > max ? n : max;
+      }, 1000);
+      const nextNumber = maxNum + 1;
 
       // 3. Calculate totals
       const priceStr = priceNum.toFixed(2);
@@ -153,38 +157,10 @@ export default function InvoiceList() {
       const storedInvoices = JSON.parse(localStorage.getItem("invoices") || "[]");
       localStorage.setItem("invoices", JSON.stringify([...storedInvoices, newInvoice]));
 
-      // 6. Save to DB — await this so it shows in All Invoices list
-      await apiRequest("POST", "/api/invoices", {
-        invoice: {
-          invoiceNumber:          nextNumber,
-          currency:               "PKR",
-          issueDate:              now,
-          dueDate:                due,
-          clientName:             newInvoice.clientName,
-          clientEmail:            newInvoice.clientEmail,
-          clientPhone:            newInvoice.clientPhone,
-          subtotal:               priceStr,
-          subtotalDiscountValue:  "0",
-          subtotalDiscountType:   "fixed",
-          taxValue:               "0",
-          taxType:                "fixed",
-          totalAmount:            priceStr,
-          depositType:            "fixed",
-          depositValue:           "0",
-          depositRequested:       "0.00",
-          payableAfterDeposit:    priceStr,
-          paidAmount:             "0",
-          payableAmount:          priceStr,
-          description:            newInvoice.description,
-          status:                 "Unpaid",
-        },
-        items: newInvoice.items,
-      });
-
-      // 7. Mark as accepted in Supabase
+      // 6. Mark as accepted in Supabase
       await updateSupabaseStatus(String(req.id), "accepted");
 
-      // 8. Refresh queries
+      // 7. Refresh queries
       queryClient.invalidateQueries({ queryKey: ["supabase-invoice-requests"] });
       queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
       queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
@@ -194,7 +170,7 @@ export default function InvoiceList() {
         description: `Invoice #${nextNumber} created for ${req.clientName}.`,
       });
 
-      // 9. Go to preview — CreateInvoice will load from localStorage
+      // 8. Go to preview — CreateInvoice will load from localStorage
       setLocation(`/invoices/${nextNumber}/preview`);
 
     } catch (err: any) {
