@@ -222,11 +222,7 @@ export default function CreateInvoice({ params }: { params?: { id?: string } }) 
 
   const mutation = useMutation({
     mutationFn: async (data: FormValues) => {
-      console.log("Save mutation triggered with data:", data);
       if (isEditMode && params?.id) {
-        console.log(`Executing PATCH for invoice ID: ${params.id}`);
-        // For updates, we send the partial invoice and items
-        // We omit auto-generated fields to avoid validation errors
         const { invoiceNumber, createdAt, id, ...cleanInvoice } = data.invoice as any;
         const updateData = {
           invoice: cleanInvoice,
@@ -235,7 +231,6 @@ export default function CreateInvoice({ params }: { params?: { id?: string } }) 
         const res = await apiRequest("PATCH", `/api/invoices/${params.id}`, updateData);
         return res.json();
       } else {
-        console.log("Executing POST for new invoice");
         const res = await apiRequest("POST", "/api/invoices", data);
         return res.json();
       }
@@ -245,45 +240,37 @@ export default function CreateInvoice({ params }: { params?: { id?: string } }) 
       queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
       if (params?.id) {
         queryClient.invalidateQueries({ queryKey: [`/api/invoices/${params.id}`] });
-        queryClient.refetchQueries({ queryKey: [`/api/invoices/${params.id}`] });
       }
       queryClient.invalidateQueries({ queryKey: ["/api/invoices/next-number"] });
-      toast({ 
-        title: isEditMode ? "Invoice Updated" : "Invoice Created", 
-        description: isEditMode ? "Your invoice has been updated successfully." : "Your invoice has been saved successfully." 
-      });
-      setLocation("/invoices");
     },
-    onError: (error: any) => {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-    }
+    onError: () => {/* DB sync failed silently — localStorage is source of truth */}
   });
 
   const handleFormSubmit = async (data: FormValues) => {
     try {
       const storedInvoices = JSON.parse(localStorage.getItem("invoices") || "[]");
       const invoiceId = params?.id ? parseInt(params.id) : null;
-      // Strict edit mode detection: check if id exists and is valid
-      const isEditMode = invoiceId !== undefined && invoiceId !== null && !isNaN(invoiceId);
+      const isEditModeLocal = invoiceId !== undefined && invoiceId !== null && !isNaN(invoiceId);
 
-      if (isEditMode) {
-        // UPDATE using map(), matching by inv.id === invoiceId
-        const updatedInvoices = storedInvoices.map((inv: any) => 
+      if (isEditModeLocal) {
+        // UPDATE in localStorage immediately
+        const updatedInvoices = storedInvoices.map((inv: any) =>
           inv.id === invoiceId ? { ...data.invoice, id: invoiceId, items: data.items } : inv
         );
         localStorage.setItem("invoices", JSON.stringify(updatedInvoices));
-        toast({ title: "Invoice Updated", description: "Your invoice has been updated successfully." });
+        toast({ title: "✅ Invoice Updated", description: "Your invoice has been updated successfully." });
       } else {
-        // CREATE logic runs only when isEditMode === false
-        // For new invoices, use invoiceNumber as stable unique id
+        // CREATE in localStorage
         const newId = data.invoice.invoiceNumber;
         const newInvoice = { ...data.invoice, id: newId, items: data.items };
         localStorage.setItem("invoices", JSON.stringify([...storedInvoices, newInvoice]));
-        toast({ title: "Invoice Created", description: "Your invoice has been saved successfully." });
+        toast({ title: "✅ Invoice Created", description: "Your invoice has been saved successfully." });
       }
-      
-      // Sync with backend mutation
+
+      // Sync with DB in background — don't block or show error to user
       mutation.mutate(data);
+
+      // Redirect immediately — don't wait for DB
       setLocation("/invoices");
     } catch (error) {
       console.error("Error saving to localStorage:", error);
