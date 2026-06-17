@@ -281,215 +281,195 @@ export default function CreateInvoice({ params }: { params?: { id?: string } }) 
   };
 
   if (isPreviewMode) {
+    const currency = form.getValues("invoice.currency");
+    const fmt = (val: any) => `${currency} ${Number(val || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 p-4 md:p-8 print:p-0 print:bg-white">
-        <div className="max-w-5xl mx-auto space-y-6 print:max-w-none print:m-0">
-          <header className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 print:hidden">
-            <div className="flex items-center gap-3">
-              <Link href="/invoices">
-                <Button variant="ghost" size="icon"><ArrowLeft className="w-5 h-5" /></Button>
-              </Link>
-              <div className="flex items-center gap-2">
-                <img src={logoImg} alt="Logo" className="w-8 h-8 sm:w-10 sm:h-10 object-contain" />
-                <h1 className="text-lg sm:text-2xl font-bold text-slate-900 dark:text-slate-50">Invoice Preview</h1>
-              </div>
-            </div>
-            <div className="flex gap-2 w-full sm:w-auto">
-              <Button variant="outline" className="flex-1 sm:flex-none text-sm" onClick={() => window.print()}>Print / Download PDF</Button>
-              <Button className="flex-1 sm:flex-none text-sm" onClick={() => setLocation(`/invoices/${params?.id}/edit`)}>Edit Invoice</Button>
-            </div>
-          </header>
-
-          <Card className="print:shadow-none print:border-none print:rounded-none">
-            <CardContent className="p-4 sm:p-6 md:p-10 space-y-6 sm:space-y-8 print:p-8">
-              {/* Professional 2-Column Header — stacks on mobile */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-12 items-start border-b pb-6 sm:pb-8 border-slate-200">
-                <div className="space-y-4 sm:space-y-6">
-                  <div className="flex items-center gap-3">
-                    <img src={logoImg} alt="Logo" className="w-14 h-14 sm:w-20 sm:h-20 object-contain" />
-                    <div>
-                      <h2 className="text-lg sm:text-2xl font-black text-blue-700 tracking-tight leading-none">Curve Tech Solution</h2>
-                      <p className="text-xs sm:text-sm font-medium text-slate-500 mt-1">Innovation in every curve</p>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-3">
-                    <div className="text-sm text-slate-600">
-                      <p className="font-bold text-slate-900 mb-1">Contact Info</p>
-                      <p>info@curvetechsolution.com</p>
-                      <p>www.curvetechsolution.com</p>
-                    </div>
-                    
-                    <div className="grid grid-cols-1 gap-2">
-                      <div className="text-xs">
-                        <p className="font-bold text-slate-400 uppercase tracking-widest mb-1">USA Office</p>
-                        <p className="text-slate-600">117 South Lexington Street, Ste 100, Harrisonville, MO 64701, USA</p>
-                      </div>
-                      <div className="text-xs">
-                        <p className="font-bold text-slate-400 uppercase tracking-widest mb-1">Pakistan Office</p>
-                        <p className="text-slate-600">Office No 4, First Floor, Tariq Business Center, Block H-3, Johar Town, Lahore, 54000</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex flex-col sm:items-end sm:text-right">
-                  <h2 className="text-3xl sm:text-5xl font-black text-slate-900 uppercase tracking-tighter mb-4 sm:mb-6">Invoice</h2>
-                  
-                  <div className="w-full sm:max-w-[280px] space-y-4">
-                    <div className="grid grid-cols-2 gap-2 text-sm border-y py-3 border-slate-100">
-                      <div className="text-slate-500 font-medium">Invoice #</div>
-                      <div className="font-bold text-slate-900 sm:text-right">#{form.getValues("invoice.invoiceNumber")}</div>
-                      
-                      <div className="text-slate-500 font-medium">Issue Date</div>
-                      <div className="text-slate-900 sm:text-right">{form.getValues("invoice.issueDate") ? format(new Date(form.getValues("invoice.issueDate") as any), "MMM d, yyyy") : ""}</div>
-                      
-                      <div className="text-slate-500 font-medium">Due Date</div>
-                      <div className="font-bold text-blue-600 sm:text-right">{form.getValues("invoice.dueDate") ? format(new Date(form.getValues("invoice.dueDate") as any), "MMM d, yyyy") : ""}</div>
-                    </div>
-
-                    <div className="bg-slate-50 p-3 sm:p-4 rounded-lg text-left border border-slate-100">
-                      <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Bill To</p>
-                      <p className="text-base sm:text-lg font-bold text-slate-900 leading-tight">{form.getValues("invoice.clientName")}</p>
-                      <p className="text-sm text-slate-600 mt-1">{form.getValues("invoice.clientEmail")}</p>
-                      <p className="text-sm text-slate-600">{form.getValues("invoice.clientPhone")}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Items Table — scrollable on mobile, full on desktop */}
-              <div className="border rounded-lg overflow-hidden border-slate-200">
-                {/* Mobile card view */}
-                <div className="block sm:hidden divide-y divide-slate-100">
-                  {watchedItems.map((item, idx) => (
-                    <div key={idx} className="p-4 space-y-2">
-                      <p className="font-bold text-slate-900">{item.title}</p>
-                      {item.description && <p className="text-xs text-slate-500 leading-relaxed">{item.description}</p>}
-                      <div className="flex justify-between text-sm pt-1">
-                        <span className="text-slate-500">Price</span>
-                        <span className="font-medium text-slate-700">{form.getValues("invoice.currency")} {item.price}</span>
-                      </div>
-                      {item.discountValue && Number(item.discountValue) > 0 && (
-                        <div className="flex justify-between text-sm">
-                          <span className="text-slate-500">Discount</span>
-                          <span className="text-emerald-600 font-medium">
-                            {item.discountType === "percentage" ? `${item.discountValue}%` : `${form.getValues("invoice.currency")} ${item.discountValue}`}
-                          </span>
-                        </div>
-                      )}
-                      <div className="flex justify-between text-sm font-bold border-t pt-2 border-slate-100">
-                        <span className="text-slate-700">Total</span>
-                        <span className="text-slate-900">{form.getValues("invoice.currency")} {item.total}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                {/* Desktop table view */}
-                <table className="hidden sm:table w-full text-sm">
-                  <thead>
-                    <tr className="bg-slate-50 text-slate-900 border-b border-slate-200">
-                      <th className="px-4 sm:px-6 py-4 text-left font-bold">Description</th>
-                      <th className="px-4 sm:px-6 py-4 text-right font-bold w-28 sm:w-32">Price</th>
-                      <th className="px-4 sm:px-6 py-4 text-right font-bold w-28 sm:w-32">Discount</th>
-                      <th className="px-4 sm:px-6 py-4 text-right font-bold w-28 sm:w-32">Total</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {watchedItems.map((item, idx) => (
-                      <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
-                        <td className="px-4 sm:px-6 py-4">
-                          <p className="font-bold text-slate-900">{item.title}</p>
-                          <p className="text-slate-500 mt-0.5 leading-relaxed text-xs sm:text-sm">{item.description}</p>
-                        </td>
-                        <td className="px-4 sm:px-6 py-4 text-right font-medium text-slate-600">{form.getValues("invoice.currency")} {item.price}</td>
-                        <td className="px-4 sm:px-6 py-4 text-right text-slate-500">
-                          {item.discountValue && Number(item.discountValue) > 0 ? (
-                            <span className="text-emerald-600 font-medium">
-                              {item.discountType === "percentage" ? `${item.discountValue}%` : `${form.getValues("invoice.currency")} ${item.discountValue}`}
-                            </span>
-                          ) : "—"}
-                        </td>
-                        <td className="px-4 sm:px-6 py-4 text-right font-bold text-slate-900">{form.getValues("invoice.currency")} {item.total}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Totals Section */}
-              <div className="flex justify-end pt-4">
-                <div className="w-full sm:max-w-sm space-y-4">
-                  <div className="space-y-2.5 px-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-slate-500 font-medium">Subtotal</span>
-                      <span className="font-bold text-slate-900">{form.getValues("invoice.currency")} {form.getValues("invoice.subtotal")}</span>
-                    </div>
-
-                    {Number(form.getValues("invoice.subtotalDiscountValue")) > 0 && (
-                      <div className="flex justify-between text-sm">
-                        <span className="text-emerald-600 font-medium">Discount ({form.getValues("invoice.subtotalDiscountType") === "percentage" ? `${form.getValues("invoice.subtotalDiscountValue")}%` : "Fixed"})</span>
-                        <span className="font-bold text-emerald-600">-{form.getValues("invoice.currency")} {(Number(form.getValues("invoice.subtotal")) - Number(form.getValues("invoice.totalAmount"))).toFixed(2)}</span>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="bg-blue-700 text-white p-4 sm:p-6 rounded-xl shadow-lg shadow-blue-200 print:shadow-none">
-                    <div className="flex justify-between items-center gap-2">
-                      <span className="text-blue-100 font-bold uppercase tracking-wider text-xs shrink-0">Total Amount Due</span>
-                      <span className="text-2xl sm:text-3xl font-black text-right">{form.getValues("invoice.currency")} {form.getValues("invoice.totalAmount")}</span>
-                    </div>
-                  </div>
-
-                  <div className="space-y-3 px-4 py-2">
-                    {Number(form.getValues("invoice.depositRequested")) > 0 && Number(form.getValues("invoice.paidAmount")) === 0 && (
-                      <div className="flex justify-between items-center py-2 border-b border-slate-100 last:border-0">
-                        <span className="text-sm font-bold text-slate-500">Required Deposit</span>
-                        <span className="text-lg font-black text-slate-900">{form.getValues("invoice.currency")} {form.getValues("invoice.depositRequested")}</span>
-                      </div>
-                    )}
-
-                    {Number(form.getValues("invoice.paidAmount")) > 0 && (
-                      <div className="flex justify-between items-center py-2 border-b border-slate-100 last:border-0">
-                        <span className="text-sm font-bold text-emerald-600">Amount Already Paid</span>
-                        <span className="text-lg font-black text-emerald-600">{form.getValues("invoice.currency")} {form.getValues("invoice.paidAmount")}</span>
-                      </div>
-                    )}
-
-                    <div className="flex justify-between items-center pt-1">
-                      <span className="text-base font-black text-blue-700 uppercase tracking-tight">Remaining Balance</span>
-                      <span className="text-2xl font-black text-blue-700">{form.getValues("invoice.currency")} {form.getValues("invoice.payableAmount")}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Terms & Conditions Section */}
-              {form.getValues("invoice.description") && (
-                <div className="pt-12 mt-12 border-t border-slate-100 print:mt-8 print:pt-6">
-                  <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Terms & Conditions</h3>
-                  <div className="bg-slate-50/50 p-6 rounded-xl border border-slate-100 print:bg-white print:p-0 print:border-0">
-                    <p className="text-xs text-slate-500 leading-relaxed whitespace-pre-wrap">
-                      {form.getValues("invoice.description")}
-                    </p>
-                  </div>
-                </div>
-              )}
-              
-              {/* Footer */}
-              <div className="text-center pt-12 text-slate-400 text-[10px] font-medium uppercase tracking-widest hidden print:block">
-                Thank you for your business with Curve Tech Solution
-              </div>
-            </CardContent>
-          </Card>
+      <div className="min-h-screen bg-slate-100 p-4 md:p-8 print:p-0 print:bg-white">
+        {/* Action bar — hidden on print */}
+        <div className="max-w-4xl mx-auto mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 print:hidden">
+          <div className="flex items-center gap-3">
+            <Link href="/invoices">
+              <Button variant="ghost" size="icon"><ArrowLeft className="w-5 h-5" /></Button>
+            </Link>
+            <h1 className="text-lg font-semibold text-slate-700">Invoice Preview</h1>
+          </div>
+          <div className="flex gap-2 w-full sm:w-auto">
+            <Button variant="outline" className="flex-1 sm:flex-none text-sm" onClick={() => window.print()}>Print / Download PDF</Button>
+            <Button className="flex-1 sm:flex-none text-sm" onClick={() => setLocation(`/invoices/${params?.id}/edit`)}>Edit Invoice</Button>
+          </div>
         </div>
-        
+
+        {/* Invoice paper */}
+        <div className="max-w-4xl mx-auto bg-white shadow-sm print:shadow-none print:max-w-none">
+          <div className="p-8 sm:p-12 space-y-8">
+
+            {/* ── TOP HEADER ── */}
+            <div className="flex flex-col sm:flex-row items-start justify-between gap-6 pb-6 border-b border-slate-200">
+              {/* Left: logo + company info */}
+              <div className="space-y-2">
+                <div className="flex items-center gap-3">
+                  <img src={logoImg} alt="Logo" className="w-14 h-14 object-contain" />
+                  <div>
+                    <h2 className="text-2xl font-black text-slate-800 tracking-tight">Curve Tech Solution</h2>
+                    <p className="text-sm text-slate-500">hello@curvetechsolution.online</p>
+                    <p className="text-sm text-slate-500">www.curvetechsolution.online</p>
+                  </div>
+                </div>
+              </div>
+              {/* Right: INVOICE heading */}
+              <div className="sm:text-right">
+                <h1 className="text-5xl sm:text-6xl font-black text-slate-800 tracking-widest uppercase">INVOICE</h1>
+              </div>
+            </div>
+
+            {/* ── OFFICES + INVOICE META ── */}
+            <div className="flex flex-col sm:flex-row justify-between gap-6">
+              {/* Left: office addresses */}
+              <div className="flex gap-10 text-sm">
+                <div>
+                  <p className="font-bold text-slate-800 uppercase tracking-wider text-xs mb-1">USA Office</p>
+                  <p className="text-slate-600 leading-relaxed">
+                    117 South Lexington Street,<br />
+                    Ste 100, Harrisonville, MO<br />
+                    64701, USA
+                  </p>
+                </div>
+                <div>
+                  <p className="font-bold text-slate-800 uppercase tracking-wider text-xs mb-1">Pakistan Office</p>
+                  <p className="text-slate-600 leading-relaxed">
+                    Office No 4, First Floor, Tariq<br />
+                    Business Center, Block H-3,<br />
+                    Johar Town, Lahore, 54000
+                  </p>
+                </div>
+              </div>
+
+              {/* Right: invoice number / dates / bill to */}
+              <div className="text-sm sm:text-right space-y-3 shrink-0">
+                <div>
+                  <p className="text-xs text-slate-400 uppercase tracking-widest font-semibold">Invoice Number</p>
+                  <p className="text-2xl font-black text-slate-800">#{form.getValues("invoice.invoiceNumber")}</p>
+                </div>
+                <div className="grid grid-cols-2 gap-x-6 gap-y-1 sm:block sm:space-y-1">
+                  <div>
+                    <p className="text-xs text-slate-400 uppercase tracking-widest font-semibold">Issue Date</p>
+                    <p className="text-slate-700 font-medium">{form.getValues("invoice.issueDate") ? format(new Date(form.getValues("invoice.issueDate") as any), "MMM d, yyyy") : ""}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-400 uppercase tracking-widest font-semibold mt-2">Due Date</p>
+                    <p className="text-red-500 font-bold">{form.getValues("invoice.dueDate") ? format(new Date(form.getValues("invoice.dueDate") as any), "MMM d, yyyy") : ""}</p>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-400 uppercase tracking-widest font-semibold">Bill To</p>
+                  <p className="text-slate-800 font-bold text-base">{form.getValues("invoice.clientName")}</p>
+                  {form.getValues("invoice.clientEmail") && <p className="text-slate-500 text-xs">{form.getValues("invoice.clientEmail")}</p>}
+                  {form.getValues("invoice.clientPhone") && <p className="text-slate-500 text-xs">{form.getValues("invoice.clientPhone")}</p>}
+                </div>
+              </div>
+            </div>
+
+            {/* ── ITEMS TABLE ── */}
+            <div className="border border-slate-200 rounded-lg overflow-hidden">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-slate-50 border-b border-slate-200">
+                    <th className="px-5 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-widest">Description</th>
+                    <th className="px-5 py-3 text-right text-xs font-bold text-slate-500 uppercase tracking-widest w-32">Price</th>
+                    <th className="px-5 py-3 text-right text-xs font-bold text-slate-500 uppercase tracking-widest w-32">Discount</th>
+                    <th className="px-5 py-3 text-right text-xs font-bold text-slate-500 uppercase tracking-widest w-36">Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {watchedItems.map((item, idx) => (
+                    <tr key={idx} className="border-b border-slate-100 last:border-0">
+                      <td className="px-5 py-5 align-top">
+                        <p className="font-bold text-slate-800">{item.title}</p>
+                        {item.description && <p className="text-slate-500 text-xs mt-1 leading-relaxed">{item.description}</p>}
+                      </td>
+                      <td className="px-5 py-5 text-right text-slate-600 align-top">{currency} {Number(item.price || 0).toLocaleString()}</td>
+                      <td className="px-5 py-5 text-right text-slate-500 align-top">
+                        {item.discountValue && Number(item.discountValue) > 0
+                          ? (item.discountType === "percentage" ? `${item.discountValue}%` : `${currency} ${item.discountValue}`)
+                          : "–"}
+                      </td>
+                      <td className="px-5 py-5 text-right font-bold text-slate-800 align-top">{fmt(item.total)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* ── BOTTOM: terms left, totals right ── */}
+            <div className="flex flex-col sm:flex-row justify-between gap-8 pt-2">
+              {/* Left: Terms & Conditions */}
+              <div className="flex-1">
+                {form.getValues("invoice.description") && (
+                  <>
+                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Terms &amp; Conditions</p>
+                    <p className="text-xs text-slate-500 leading-relaxed whitespace-pre-wrap">{form.getValues("invoice.description")}</p>
+                  </>
+                )}
+              </div>
+
+              {/* Right: totals */}
+              <div className="w-full sm:w-72 space-y-2 shrink-0">
+                {/* Subtotal */}
+                <div className="flex justify-between text-sm py-1 border-b border-slate-100">
+                  <span className="text-slate-500">Subtotal</span>
+                  <span className="font-semibold text-slate-800">{fmt(form.getValues("invoice.subtotal"))}</span>
+                </div>
+
+                {Number(form.getValues("invoice.subtotalDiscountValue")) > 0 && (
+                  <div className="flex justify-between text-sm py-1 border-b border-slate-100">
+                    <span className="text-slate-500">Discount</span>
+                    <span className="font-semibold text-slate-800">
+                      {form.getValues("invoice.subtotalDiscountType") === "percentage"
+                        ? `${form.getValues("invoice.subtotalDiscountValue")}%`
+                        : fmt(form.getValues("invoice.subtotalDiscountValue"))}
+                    </span>
+                  </div>
+                )}
+
+                {/* Total Due — dark box */}
+                <div className="bg-slate-800 text-white rounded-md px-5 py-4 flex justify-between items-center mt-2">
+                  <span className="text-xs font-bold uppercase tracking-widest text-slate-300">Total Due</span>
+                  <span className="text-2xl font-black">{fmt(form.getValues("invoice.totalAmount"))}</span>
+                </div>
+
+                {/* Deposit Requested */}
+                {Number(form.getValues("invoice.depositRequested")) > 0 && (
+                  <div className="flex justify-between text-sm pt-2">
+                    <span className="text-slate-500">Deposit Requested</span>
+                    <span className="font-bold text-slate-800">{fmt(form.getValues("invoice.depositRequested"))}</span>
+                  </div>
+                )}
+
+                {/* Paid Amount */}
+                {Number(form.getValues("invoice.paidAmount")) > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-slate-500">Amount Paid</span>
+                    <span className="font-bold text-slate-800">{fmt(form.getValues("invoice.paidAmount"))}</span>
+                  </div>
+                )}
+
+                {/* Remaining balance */}
+                {Number(form.getValues("invoice.paidAmount")) > 0 && (
+                  <div className="flex justify-between text-sm pt-1 border-t border-slate-200">
+                    <span className="font-bold text-slate-700">Remaining Balance</span>
+                    <span className="font-black text-slate-800">{fmt(form.getValues("invoice.payableAmount"))}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+          </div>
+        </div>
+
         <style dangerouslySetInnerHTML={{ __html: `
           @media print {
             body { background: white !important; }
-            .print\\:shadow-none { box-shadow: none !important; }
-            .print\\:border-none { border: none !important; }
-            .print\\:rounded-none { border-radius: 0 !important; }
             @page { margin: 1.5cm; }
           }
         ` }} />
