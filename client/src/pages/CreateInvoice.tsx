@@ -284,43 +284,43 @@ export default function CreateInvoice({ params }: { params?: { id?: string } }) 
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-slate-950 p-4 md:p-8 print:p-0 print:bg-white">
         <div className="max-w-5xl mx-auto space-y-6 print:max-w-none print:m-0">
-          <header className="flex items-center justify-between print:hidden">
-            <div className="flex items-center gap-4">
+          <header className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 print:hidden">
+            <div className="flex items-center gap-3">
               <Link href="/invoices">
                 <Button variant="ghost" size="icon"><ArrowLeft className="w-5 h-5" /></Button>
               </Link>
-              <div className="flex items-center gap-3">
-                <img src={logoImg} alt="Logo" className="w-10 h-10 object-contain" />
-                <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-50">Invoice Preview</h1>
+              <div className="flex items-center gap-2">
+                <img src={logoImg} alt="Logo" className="w-8 h-8 sm:w-10 sm:h-10 object-contain" />
+                <h1 className="text-lg sm:text-2xl font-bold text-slate-900 dark:text-slate-50">Invoice Preview</h1>
               </div>
             </div>
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={() => window.print()}>Print / Download PDF</Button>
-              <Button onClick={() => setLocation(`/invoices/${params?.id}/edit`)}>Edit Invoice</Button>
+            <div className="flex gap-2 w-full sm:w-auto">
+              <Button variant="outline" className="flex-1 sm:flex-none text-sm" onClick={() => window.print()}>Print / Download PDF</Button>
+              <Button className="flex-1 sm:flex-none text-sm" onClick={() => setLocation(`/invoices/${params?.id}/edit`)}>Edit Invoice</Button>
             </div>
           </header>
 
           <Card className="print:shadow-none print:border-none print:rounded-none">
-            <CardContent className="p-10 space-y-8 print:p-8">
-              {/* Professional 2-Column Header */}
-              <div className="grid grid-cols-2 gap-12 items-start border-b pb-8 border-slate-200">
-                <div className="space-y-6">
-                  <div className="flex items-center gap-4">
-                    <img src={logoImg} alt="Logo" className="w-20 h-20 object-contain" />
+            <CardContent className="p-4 sm:p-6 md:p-10 space-y-6 sm:space-y-8 print:p-8">
+              {/* Professional 2-Column Header — stacks on mobile */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-12 items-start border-b pb-6 sm:pb-8 border-slate-200">
+                <div className="space-y-4 sm:space-y-6">
+                  <div className="flex items-center gap-3">
+                    <img src={logoImg} alt="Logo" className="w-14 h-14 sm:w-20 sm:h-20 object-contain" />
                     <div>
-                      <h2 className="text-2xl font-black text-blue-700 tracking-tight leading-none">Curve Tech Solution</h2>
-                      <p className="text-sm font-medium text-slate-500 mt-1">Innovation in every curve</p>
+                      <h2 className="text-lg sm:text-2xl font-black text-blue-700 tracking-tight leading-none">Curve Tech Solution</h2>
+                      <p className="text-xs sm:text-sm font-medium text-slate-500 mt-1">Innovation in every curve</p>
                     </div>
                   </div>
                   
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     <div className="text-sm text-slate-600">
                       <p className="font-bold text-slate-900 mb-1">Contact Info</p>
                       <p>info@curvetechsolution.com</p>
                       <p>www.curvetechsolution.com</p>
                     </div>
                     
-                    <div className="grid grid-cols-1 gap-3">
+                    <div className="grid grid-cols-1 gap-2">
                       <div className="text-xs">
                         <p className="font-bold text-slate-400 uppercase tracking-widest mb-1">USA Office</p>
                         <p className="text-slate-600">117 South Lexington Street, Ste 100, Harrisonville, MO 64701, USA</p>
@@ -333,24 +333,24 @@ export default function CreateInvoice({ params }: { params?: { id?: string } }) 
                   </div>
                 </div>
 
-                <div className="flex flex-col items-end text-right">
-                  <h2 className="text-5xl font-black text-slate-900 uppercase tracking-tighter mb-6">Invoice</h2>
+                <div className="flex flex-col sm:items-end sm:text-right">
+                  <h2 className="text-3xl sm:text-5xl font-black text-slate-900 uppercase tracking-tighter mb-4 sm:mb-6">Invoice</h2>
                   
-                  <div className="w-full max-w-[280px] space-y-4">
+                  <div className="w-full sm:max-w-[280px] space-y-4">
                     <div className="grid grid-cols-2 gap-2 text-sm border-y py-3 border-slate-100">
-                      <div className="text-slate-500 font-medium text-left">Invoice #</div>
-                      <div className="font-bold text-slate-900">#{form.getValues("invoice.invoiceNumber")}</div>
+                      <div className="text-slate-500 font-medium">Invoice #</div>
+                      <div className="font-bold text-slate-900 sm:text-right">#{form.getValues("invoice.invoiceNumber")}</div>
                       
-                      <div className="text-slate-500 font-medium text-left">Issue Date</div>
-                      <div className="text-slate-900">{form.getValues("invoice.issueDate") ? format(new Date(form.getValues("invoice.issueDate") as any), "MMM d, yyyy") : ""}</div>
+                      <div className="text-slate-500 font-medium">Issue Date</div>
+                      <div className="text-slate-900 sm:text-right">{form.getValues("invoice.issueDate") ? format(new Date(form.getValues("invoice.issueDate") as any), "MMM d, yyyy") : ""}</div>
                       
-                      <div className="text-slate-500 font-medium text-left">Due Date</div>
-                      <div className="font-bold text-blue-600">{form.getValues("invoice.dueDate") ? format(new Date(form.getValues("invoice.dueDate") as any), "MMM d, yyyy") : ""}</div>
+                      <div className="text-slate-500 font-medium">Due Date</div>
+                      <div className="font-bold text-blue-600 sm:text-right">{form.getValues("invoice.dueDate") ? format(new Date(form.getValues("invoice.dueDate") as any), "MMM d, yyyy") : ""}</div>
                     </div>
 
-                    <div className="bg-slate-50 p-4 rounded-lg text-left mt-4 border border-slate-100">
+                    <div className="bg-slate-50 p-3 sm:p-4 rounded-lg text-left border border-slate-100">
                       <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Bill To</p>
-                      <p className="text-lg font-bold text-slate-900 leading-tight">{form.getValues("invoice.clientName")}</p>
+                      <p className="text-base sm:text-lg font-bold text-slate-900 leading-tight">{form.getValues("invoice.clientName")}</p>
                       <p className="text-sm text-slate-600 mt-1">{form.getValues("invoice.clientEmail")}</p>
                       <p className="text-sm text-slate-600">{form.getValues("invoice.clientPhone")}</p>
                     </div>
@@ -358,33 +358,59 @@ export default function CreateInvoice({ params }: { params?: { id?: string } }) 
                 </div>
               </div>
 
-              {/* Items Table */}
+              {/* Items Table — scrollable on mobile, full on desktop */}
               <div className="border rounded-lg overflow-hidden border-slate-200">
-                <table className="w-full text-sm">
+                {/* Mobile card view */}
+                <div className="block sm:hidden divide-y divide-slate-100">
+                  {watchedItems.map((item, idx) => (
+                    <div key={idx} className="p-4 space-y-2">
+                      <p className="font-bold text-slate-900">{item.title}</p>
+                      {item.description && <p className="text-xs text-slate-500 leading-relaxed">{item.description}</p>}
+                      <div className="flex justify-between text-sm pt-1">
+                        <span className="text-slate-500">Price</span>
+                        <span className="font-medium text-slate-700">{form.getValues("invoice.currency")} {item.price}</span>
+                      </div>
+                      {item.discountValue && Number(item.discountValue) > 0 && (
+                        <div className="flex justify-between text-sm">
+                          <span className="text-slate-500">Discount</span>
+                          <span className="text-emerald-600 font-medium">
+                            {item.discountType === "percentage" ? `${item.discountValue}%` : `${form.getValues("invoice.currency")} ${item.discountValue}`}
+                          </span>
+                        </div>
+                      )}
+                      <div className="flex justify-between text-sm font-bold border-t pt-2 border-slate-100">
+                        <span className="text-slate-700">Total</span>
+                        <span className="text-slate-900">{form.getValues("invoice.currency")} {item.total}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {/* Desktop table view */}
+                <table className="hidden sm:table w-full text-sm">
                   <thead>
                     <tr className="bg-slate-50 text-slate-900 border-b border-slate-200">
-                      <th className="px-6 py-4 text-left font-bold">Description</th>
-                      <th className="px-6 py-4 text-right font-bold w-32">Price</th>
-                      <th className="px-6 py-4 text-right font-bold w-32">Discount</th>
-                      <th className="px-6 py-4 text-right font-bold w-32">Total</th>
+                      <th className="px-4 sm:px-6 py-4 text-left font-bold">Description</th>
+                      <th className="px-4 sm:px-6 py-4 text-right font-bold w-28 sm:w-32">Price</th>
+                      <th className="px-4 sm:px-6 py-4 text-right font-bold w-28 sm:w-32">Discount</th>
+                      <th className="px-4 sm:px-6 py-4 text-right font-bold w-28 sm:w-32">Total</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     {watchedItems.map((item, idx) => (
                       <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
-                        <td className="px-6 py-5">
-                          <p className="font-bold text-slate-900 text-base">{item.title}</p>
-                          <p className="text-slate-500 mt-0.5 leading-relaxed">{item.description}</p>
+                        <td className="px-4 sm:px-6 py-4">
+                          <p className="font-bold text-slate-900">{item.title}</p>
+                          <p className="text-slate-500 mt-0.5 leading-relaxed text-xs sm:text-sm">{item.description}</p>
                         </td>
-                        <td className="px-6 py-5 text-right font-medium text-slate-600">{form.getValues("invoice.currency")} {item.price}</td>
-                        <td className="px-6 py-5 text-right text-slate-500">
+                        <td className="px-4 sm:px-6 py-4 text-right font-medium text-slate-600">{form.getValues("invoice.currency")} {item.price}</td>
+                        <td className="px-4 sm:px-6 py-4 text-right text-slate-500">
                           {item.discountValue && Number(item.discountValue) > 0 ? (
                             <span className="text-emerald-600 font-medium">
                               {item.discountType === "percentage" ? `${item.discountValue}%` : `${form.getValues("invoice.currency")} ${item.discountValue}`}
                             </span>
                           ) : "—"}
                         </td>
-                        <td className="px-6 py-5 text-right font-bold text-slate-900">{form.getValues("invoice.currency")} {item.total}</td>
+                        <td className="px-4 sm:px-6 py-4 text-right font-bold text-slate-900">{form.getValues("invoice.currency")} {item.total}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -393,7 +419,7 @@ export default function CreateInvoice({ params }: { params?: { id?: string } }) 
 
               {/* Totals Section */}
               <div className="flex justify-end pt-4">
-                <div className="w-full max-w-sm space-y-4">
+                <div className="w-full sm:max-w-sm space-y-4">
                   <div className="space-y-2.5 px-2">
                     <div className="flex justify-between text-sm">
                       <span className="text-slate-500 font-medium">Subtotal</span>
@@ -408,10 +434,10 @@ export default function CreateInvoice({ params }: { params?: { id?: string } }) 
                     )}
                   </div>
 
-                  <div className="bg-blue-700 text-white p-6 rounded-xl shadow-lg shadow-blue-200 print:shadow-none">
-                    <div className="flex justify-between items-center">
-                      <span className="text-blue-100 font-bold uppercase tracking-wider text-xs">Total Amount Due</span>
-                      <span className="text-3xl font-black">{form.getValues("invoice.currency")} {form.getValues("invoice.totalAmount")}</span>
+                  <div className="bg-blue-700 text-white p-4 sm:p-6 rounded-xl shadow-lg shadow-blue-200 print:shadow-none">
+                    <div className="flex justify-between items-center gap-2">
+                      <span className="text-blue-100 font-bold uppercase tracking-wider text-xs shrink-0">Total Amount Due</span>
+                      <span className="text-2xl sm:text-3xl font-black text-right">{form.getValues("invoice.currency")} {form.getValues("invoice.totalAmount")}</span>
                     </div>
                   </div>
 
@@ -472,16 +498,16 @@ export default function CreateInvoice({ params }: { params?: { id?: string } }) 
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 p-4 md:p-8">
-      <div className="max-w-5xl mx-auto space-y-8">
-        <header className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 p-3 sm:p-4 md:p-8">
+      <div className="max-w-5xl mx-auto space-y-6 sm:space-y-8">
+        <header className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 sm:gap-4 min-w-0">
             <Link href="/invoices">
-              <Button variant="ghost" size="icon"><ArrowLeft className="w-5 h-5" /></Button>
+              <Button variant="ghost" size="icon" className="shrink-0"><ArrowLeft className="w-5 h-5" /></Button>
             </Link>
-            <div className="flex items-center gap-3">
-              <img src={logoImg} alt="Logo" className="w-10 h-10 object-contain" />
-              <h1 className="text-2xl font-bold">Curve Tech Solution</h1>
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+              <img src={logoImg} alt="Logo" className="w-8 h-8 sm:w-10 sm:h-10 object-contain shrink-0" />
+              <h1 className="text-base sm:text-2xl font-bold truncate">Curve Tech Solution</h1>
             </div>
           </div>
           <Button 
@@ -491,7 +517,7 @@ export default function CreateInvoice({ params }: { params?: { id?: string } }) 
               await handleFormSubmit(data);
             }}
             disabled={mutation.isPending} 
-            className="relative z-50 pointer-events-auto"
+            className="relative z-50 pointer-events-auto shrink-0 text-sm"
           >
             {mutation.isPending ? "Saving..." : (isEditMode ? "Update Invoice" : "Save Invoice")}
           </Button>
@@ -565,18 +591,18 @@ export default function CreateInvoice({ params }: { params?: { id?: string } }) 
             </Card>
 
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold text-blue-600">Invoice Items</h2>
+              <div className="flex items-center justify-between gap-2">
+                <h2 className="text-lg sm:text-xl font-bold text-blue-600">Invoice Items</h2>
                 <Button type="button" variant="outline" size="sm" onClick={() => append({ title: "", description: "", price: "0", discountValue: "0", discountType: "fixed", total: "0" })}>
-                  <Plus className="w-4 h-4 mr-2" /> Add Item
+                  <Plus className="w-4 h-4 mr-1 sm:mr-2" /> <span className="hidden xs:inline">Add </span>Item
                 </Button>
               </div>
 
               {fields.map((field, index) => (
                 <Card key={field.id} className="bg-sky-50 dark:bg-sky-900/20 border-sky-100">
-                  <CardContent className="pt-6 space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                      <div className="md:col-span-2">
+                  <CardContent className="pt-4 sm:pt-6 space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+                      <div className="sm:col-span-2">
                         <FormField control={form.control} name={`items.${index}.title`} render={({ field }) => (
                           <FormItem><FormLabel>Title</FormLabel><FormControl><Input {...field} value={field.value || ""} /></FormControl></FormItem>
                         )} />
@@ -611,7 +637,7 @@ export default function CreateInvoice({ params }: { params?: { id?: string } }) 
                         <Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={() => remove(index)} disabled={fields.length === 1}><Trash2 className="w-4 h-4" /></Button>
                       </div>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                       <FormField control={form.control} name={`items.${index}.description`} render={({ field }) => (
                         <FormItem><FormLabel>Description</FormLabel><FormControl><Textarea {...field} value={field.value || ""} className="min-h-[80px]" /></FormControl></FormItem>
                       )} />
