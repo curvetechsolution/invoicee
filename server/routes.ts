@@ -167,12 +167,8 @@ export async function registerRoutes(
       if (status === "accepted") {
         try {
           const nextNumber = await storage.getNextInvoiceNumber();
-          // Extract price — prefer message field "PRICE:XXXXX" if Supabase numeric column corrupted it
-          let priceNum = parseFloat(updated.price || "0") || 0;
-          const msgPriceMatch = (updated.message || "").match(/^PRICE:([0-9.]+)/);
-          if (msgPriceMatch) {
-            priceNum = parseFloat(msgPriceMatch[1]) || priceNum;
-          }
+          // Price comes as "Rs. 28,000" or "Rs. 28,000/mo" — strip non-numeric except dot
+          let priceNum = parseFloat((updated.price || "0").replace(/[^0-9.]/g, "")) || 0;
           const invoiceData = {
             invoiceNumber: nextNumber,
             issueDate: new Date(),
