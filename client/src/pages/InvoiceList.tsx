@@ -110,8 +110,8 @@ export default function InvoiceList() {
       const beforeDot  = rawPrice.split("·")[0];
       // Step 2: take only part before "/" (per month info)
       const beforeSlash = beforeDot.split("/")[0];
-      // Step 3: remove all non-numeric except dot
-      const cleanPrice  = beforeSlash.replace(/[^0-9.]/g, "");
+      // Step 3: remove all non-numeric (digits only — PKR prices are whole numbers)
+      const cleanPrice  = beforeSlash.replace(/[^0-9]/g, "");
       const priceNum    = parseFloat(cleanPrice) || 0;
 
       // 2. Get next invoice number from localStorage
