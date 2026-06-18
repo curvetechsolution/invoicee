@@ -96,24 +96,6 @@
     margin: 1.2cm 1.5cm;
   }
 
-  /* Hide everything on the page */
-  body > * {
-    display: none !important;
-  }
-
-  /* Show only the invoice root */
-  #invoice-print-root {
-    display: block !important;
-    background: white !important;
-    padding: 0 !important;
-    margin: 0 !important;
-  }
-
-  /* Action buttons row — hidden */
-  #invoice-print-root > .mb-4 {
-    display: none !important;
-  }
-
   /* Invoice paper — full page width */
   #invoice-print-root > .max-w-4xl {
     max-width: 100% !important;
@@ -181,4 +163,3 @@
     width: 18rem !important;
   }
 }
-
