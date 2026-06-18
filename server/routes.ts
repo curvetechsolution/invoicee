@@ -167,8 +167,8 @@ export async function registerRoutes(
       if (status === "accepted") {
         try {
           const nextNumber = await storage.getNextInvoiceNumber();
-          // Price comes as "Rs. 28,000" or "Rs. 28,000/mo" — strip non-numeric except dot
-          let priceNum = parseFloat((updated.price || "0").replace(/[^0-9.]/g, "")) || 0;
+          // Price comes as "Rs. 28,000" or "Rs. 28,000/mo" — strip everything except digits
+          let priceNum = parseFloat((updated.price || "0").replace(/[^0-9]/g, "")) || 0;
           const invoiceData = {
             invoiceNumber: nextNumber,
             issueDate: new Date(),
