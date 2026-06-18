@@ -285,7 +285,7 @@ export default function CreateInvoice({ params }: { params?: { id?: string } }) 
     const fmt = (val: any) => `${currency} ${Number(val || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
     return (
-      <div className="min-h-screen bg-slate-100 p-4 md:p-8 print:p-0 print:bg-white">
+      <div id="invoice-print-root" className="min-h-screen bg-slate-100 p-4 md:p-8 print:p-0 print:bg-white">
         {/* Action bar — hidden on print */}
         <div className="max-w-4xl mx-auto mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 print:hidden">
           <div className="flex items-center gap-3">
@@ -295,7 +295,12 @@ export default function CreateInvoice({ params }: { params?: { id?: string } }) 
             <h1 className="text-lg font-semibold text-slate-700">Invoice Preview</h1>
           </div>
           <div className="flex gap-2 w-full sm:w-auto">
-            <Button variant="outline" className="flex-1 sm:flex-none text-sm" onClick={() => window.print()}>Print / Download PDF</Button>
+            <Button variant="outline" className="flex-1 sm:flex-none text-sm" onClick={() => {
+              // Hide everything except the invoice root during print
+              document.body.classList.add('printing-invoice');
+              window.print();
+              document.body.classList.remove('printing-invoice');
+            }}>Print / Download PDF</Button>
             <Button className="flex-1 sm:flex-none text-sm" onClick={() => setLocation(`/invoices/${params?.id}/edit`)}>Edit Invoice</Button>
           </div>
         </div>
@@ -483,8 +488,75 @@ export default function CreateInvoice({ params }: { params?: { id?: string } }) 
 
         <style dangerouslySetInnerHTML={{ __html: `
           @media print {
-            body { background: white !important; }
-            @page { margin: 1.5cm; }
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            
+            html, body {
+              background: white !important;
+              margin: 0 !important;
+              padding: 0 !important;
+              width: 100% !important;
+            }
+
+            @page {
+              size: A4;
+              margin: 1.2cm 1.5cm;
+            }
+
+            /* Hide the action bar */
+            .print\\:hidden { display: none !important; }
+            .print\\:p-0 { padding: 0 !important; }
+            .print\\:bg-white { background: white !important; }
+            .print\\:shadow-none { box-shadow: none !important; }
+            .print\\:max-w-none { max-width: none !important; }
+
+            /* Invoice paper container — full width, no shadow */
+            #invoice-print-root {
+              background: white !important;
+              padding: 0 !important;
+            }
+
+            #invoice-print-root .max-w-4xl {
+              max-width: 100% !important;
+              margin: 0 !important;
+              box-shadow: none !important;
+            }
+
+            /* Ensure flex rows stay as rows in print */
+            #invoice-print-root .flex { display: flex !important; }
+            #invoice-print-root .items-start { align-items: flex-start !important; }
+            #invoice-print-root .items-center { align-items: center !important; }
+            #invoice-print-root .justify-between { justify-content: space-between !important; }
+            #invoice-print-root .justify-end { justify-content: flex-end !important; }
+
+            /* Grid for the meta section */
+            #invoice-print-root .grid { display: grid !important; }
+            #invoice-print-root .grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+
+            /* Table stays full width and doesn't break */
+            #invoice-print-root table { width: 100% !important; border-collapse: collapse !important; }
+            #invoice-print-root thead, #invoice-print-root tbody,
+            #invoice-print-root tr, #invoice-print-root th, #invoice-print-root td {
+              page-break-inside: avoid !important;
+            }
+
+            /* Preserve dark background in Total Due box */
+            #invoice-print-root .bg-slate-900 { background-color: #0f172a !important; }
+            #invoice-print-root .bg-slate-50  { background-color: #f8fafc !important; }
+
+            /* Preserve text colors */
+            #invoice-print-root .text-white   { color: #ffffff !important; }
+            #invoice-print-root .text-red-500 { color: #ef4444 !important; }
+            #invoice-print-root .text-slate-300 { color: #cbd5e1 !important; }
+
+            /* Shrink-0 must stay */
+            #invoice-print-root .shrink-0 { flex-shrink: 0 !important; }
+            #invoice-print-root .flex-1 { flex: 1 1 0% !important; }
+
+            /* Width for totals panel */
+            #invoice-print-root .w-72 { width: 18rem !important; }
+
+            /* Don't page-break inside rows */
+            #invoice-print-root tr { page-break-inside: avoid !important; }
           }
         ` }} />
       </div>
