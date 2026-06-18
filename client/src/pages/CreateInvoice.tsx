@@ -302,32 +302,32 @@ export default function CreateInvoice({ params }: { params?: { id?: string } }) 
 
         {/* Invoice paper */}
         <div className="max-w-4xl mx-auto bg-white shadow-sm print:shadow-none print:max-w-none">
-          <div className="px-8 py-8 space-y-0">
+          <div className="px-10 py-8">
 
             {/* ── TOP HEADER: Logo+Company left, INVOICE right ── */}
-            <div className="flex items-center justify-between pb-6">
+            <div className="flex items-start justify-between mb-6">
               {/* Left: logo + company name + contact */}
               <div className="flex items-center gap-4">
-                <img src={logoImg} alt="Logo" className="w-12 h-12 object-contain" />
+                <img src={logoImg} alt="Logo" className="w-14 h-14 object-contain" />
                 <div>
-                  <h2 className="text-xl font-extrabold text-slate-900 tracking-tight leading-tight">Curve Tech Solution</h2>
-                  <p className="text-xs text-slate-500 mt-0.5">hello@curvetechsolution.online</p>
-                  <p className="text-xs text-slate-500">www.curvetechsolution.online</p>
+                  <h2 className="text-2xl font-bold text-slate-900 leading-tight">Curve Tech Solution</h2>
+                  <p className="text-sm text-slate-500 mt-0.5">hello@curvetechsolution.online</p>
+                  <p className="text-sm text-slate-500">www.curvetechsolution.online</p>
                 </div>
               </div>
               {/* Right: INVOICE big heading */}
-              <h1 className="text-5xl font-black text-slate-900 tracking-widest uppercase">INVOICE</h1>
+              <h1 className="text-6xl font-black text-slate-900 tracking-widest uppercase">INVOICE</h1>
             </div>
 
             {/* ── THIN DIVIDER ── */}
-            <hr className="border-slate-200" />
+            <hr className="border-slate-200 mb-6" />
 
-            {/* ── OFFICES LEFT + INVOICE META RIGHT ── */}
-            <div className="flex justify-between items-start pt-6 pb-6">
+            {/* ── OFFICES LEFT + INVOICE META RIGHT — all in one row ── */}
+            <div className="flex justify-between items-start mb-8">
               {/* Left: office addresses side by side */}
-              <div className="flex gap-12 text-sm">
+              <div className="flex gap-14 text-sm">
                 <div>
-                  <p className="font-bold text-slate-800 uppercase tracking-widest text-xs mb-2">USA Office</p>
+                  <p className="font-bold text-slate-900 uppercase text-xs mb-2 tracking-widest">USA OFFICE</p>
                   <p className="text-slate-600 leading-6">
                     117 South Lexington Street,<br />
                     Ste 100, Harrisonville, MO<br />
@@ -335,7 +335,7 @@ export default function CreateInvoice({ params }: { params?: { id?: string } }) 
                   </p>
                 </div>
                 <div>
-                  <p className="font-bold text-slate-800 uppercase tracking-widest text-xs mb-2">Pakistan Office</p>
+                  <p className="font-bold text-slate-900 uppercase text-xs mb-2 tracking-widest">PAKISTAN OFFICE</p>
                   <p className="text-slate-600 leading-6">
                     Office No 4, First Floor, Tariq<br />
                     Business Center, Block H-3,<br />
@@ -344,29 +344,29 @@ export default function CreateInvoice({ params }: { params?: { id?: string } }) 
                 </div>
               </div>
 
-              {/* Right: 2×2 meta grid */}
+              {/* Right: 2×2 meta grid — Invoice Number | Bill To / Issue Date | Due Date */}
               <div className="shrink-0">
-                <div className="grid grid-cols-2 gap-x-12 gap-y-5 text-right">
-                  {/* Invoice Number label — left col */}
+                <div className="grid grid-cols-2 gap-x-10 gap-y-4">
+                  {/* Invoice Number — left col */}
                   <div className="text-right">
-                    <p className="text-xs text-slate-400 uppercase tracking-widest font-semibold mb-1">Invoice Number</p>
-                    <p className="text-xl font-black text-slate-900">#{form.getValues("invoice.invoiceNumber")}</p>
+                    <p className="text-xs text-slate-400 uppercase tracking-widest font-semibold mb-1">INVOICE NUMBER</p>
+                    <p className="text-2xl font-black text-slate-900">#{form.getValues("invoice.invoiceNumber")}</p>
                   </div>
                   {/* Bill To — right col */}
                   <div className="text-right">
-                    <p className="text-xs text-slate-400 uppercase tracking-widest font-semibold mb-1">Bill To</p>
+                    <p className="text-xs text-slate-400 uppercase tracking-widest font-semibold mb-1">BILL TO</p>
                     <p className="text-base font-bold text-slate-900">{form.getValues("invoice.clientName")}</p>
-                    {form.getValues("invoice.clientEmail") && <p className="text-slate-500 text-xs">{form.getValues("invoice.clientEmail")}</p>}
+                    {form.getValues("invoice.clientEmail") && <p className="text-slate-500 text-xs mt-0.5">{form.getValues("invoice.clientEmail")}</p>}
                     {form.getValues("invoice.clientPhone") && <p className="text-slate-500 text-xs">{form.getValues("invoice.clientPhone")}</p>}
                   </div>
                   {/* Issue Date */}
                   <div className="text-right">
-                    <p className="text-xs text-slate-400 uppercase tracking-widest font-semibold mb-1">Issue Date</p>
+                    <p className="text-xs text-slate-400 uppercase tracking-widest font-semibold mb-1">ISSUE DATE</p>
                     <p className="text-slate-700 font-medium text-sm">{form.getValues("invoice.issueDate") ? format(new Date(form.getValues("invoice.issueDate") as any), "MMM d, yyyy") : ""}</p>
                   </div>
                   {/* Due Date */}
                   <div className="text-right">
-                    <p className="text-xs text-slate-400 uppercase tracking-widest font-semibold mb-1">Due Date</p>
+                    <p className="text-xs text-slate-400 uppercase tracking-widest font-semibold mb-1">DUE DATE</p>
                     <p className="text-red-500 font-bold text-sm">{form.getValues("invoice.dueDate") ? format(new Date(form.getValues("invoice.dueDate") as any), "MMM d, yyyy") : ""}</p>
                   </div>
                 </div>
@@ -374,19 +374,19 @@ export default function CreateInvoice({ params }: { params?: { id?: string } }) 
             </div>
 
             {/* ── ITEMS TABLE ── */}
-            <div className="border border-slate-200 rounded-lg overflow-hidden">
+            <div className="border border-slate-200 rounded-lg overflow-hidden mb-8">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-slate-200">
-                    <th className="px-6 py-3.5 text-left text-xs font-bold text-slate-500 uppercase tracking-widest">Description</th>
-                    <th className="px-6 py-3.5 text-center text-xs font-bold text-slate-500 uppercase tracking-widest w-36">Price</th>
-                    <th className="px-6 py-3.5 text-center text-xs font-bold text-slate-500 uppercase tracking-widest w-36">Discount</th>
-                    <th className="px-6 py-3.5 text-right text-xs font-bold text-slate-500 uppercase tracking-widest w-40">Total</th>
+                  <tr className="border-b border-slate-200 bg-white">
+                    <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-widest">Description</th>
+                    <th className="px-6 py-4 text-center text-xs font-bold text-slate-500 uppercase tracking-widest w-36">Price</th>
+                    <th className="px-6 py-4 text-center text-xs font-bold text-slate-500 uppercase tracking-widest w-36">Discount</th>
+                    <th className="px-6 py-4 text-right text-xs font-bold text-slate-500 uppercase tracking-widest w-40">Total</th>
                   </tr>
                 </thead>
                 <tbody>
                   {watchedItems.map((item, idx) => (
-                    <tr key={idx} className="border-b border-slate-100 last:border-0">
+                    <tr key={idx} className="border-b border-slate-100 last:border-0 bg-slate-50">
                       <td className="px-6 py-6 align-top">
                         <p className="font-bold text-slate-900 text-sm">{item.title}</p>
                         {item.description && <p className="text-slate-500 text-xs mt-1.5 leading-relaxed">{item.description}</p>}
@@ -405,30 +405,28 @@ export default function CreateInvoice({ params }: { params?: { id?: string } }) 
             </div>
 
             {/* ── BOTTOM: terms left, totals right ── */}
-            <div className="flex justify-between gap-12 pt-8">
-              {/* Left: Terms & Conditions */}
-              <div className="flex-1">
-                {form.getValues("invoice.description") && (
-                  <>
-                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Terms &amp; Conditions</p>
-                    <p className="text-xs text-slate-500 leading-relaxed whitespace-pre-wrap">{form.getValues("invoice.description")}</p>
-                  </>
-                )}
-              </div>
+            <div className="flex justify-end gap-12">
+              {/* Terms & Conditions — only if present */}
+              {form.getValues("invoice.description") && (
+                <div className="flex-1">
+                  <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Terms &amp; Conditions</p>
+                  <p className="text-xs text-slate-500 leading-relaxed whitespace-pre-wrap">{form.getValues("invoice.description")}</p>
+                </div>
+              )}
 
               {/* Right: totals panel */}
-              <div className="w-80 shrink-0 space-y-0">
+              <div className="w-72 shrink-0">
                 {/* Subtotal row */}
                 <div className="flex justify-between items-center py-3 border-b border-slate-200">
                   <span className="text-sm text-slate-500">Subtotal</span>
-                  <span className="text-sm font-semibold text-slate-800">{fmt(form.getValues("invoice.subtotal"))}</span>
+                  <span className="text-sm text-slate-800">{fmt(form.getValues("invoice.subtotal"))}</span>
                 </div>
 
                 {/* Subtotal discount row */}
                 {Number(form.getValues("invoice.subtotalDiscountValue")) > 0 && (
                   <div className="flex justify-between items-center py-3 border-b border-slate-200">
                     <span className="text-sm text-slate-500">Discount</span>
-                    <span className="text-sm font-semibold text-slate-800">
+                    <span className="text-sm text-slate-800">
                       {form.getValues("invoice.subtotalDiscountType") === "percentage"
                         ? `${form.getValues("invoice.subtotalDiscountValue")}%`
                         : fmt(form.getValues("invoice.subtotalDiscountValue"))}
@@ -436,10 +434,22 @@ export default function CreateInvoice({ params }: { params?: { id?: string } }) 
                   </div>
                 )}
 
+                {/* Tax row */}
+                {Number(form.getValues("invoice.taxValue")) > 0 && (
+                  <div className="flex justify-between items-center py-3 border-b border-slate-200">
+                    <span className="text-sm text-slate-500">Tax</span>
+                    <span className="text-sm text-slate-800">
+                      {form.getValues("invoice.taxType") === "percentage"
+                        ? `${form.getValues("invoice.taxValue")}%`
+                        : fmt(form.getValues("invoice.taxValue"))}
+                    </span>
+                  </div>
+                )}
+
                 {/* Total Due — dark filled box */}
-                <div className="bg-slate-800 text-white rounded-md px-5 py-4 flex justify-between items-center mt-3">
-                  <span className="text-xs font-bold uppercase tracking-widest text-slate-300">Total Due</span>
-                  <span className="text-xl font-black tracking-tight">{fmt(form.getValues("invoice.totalAmount"))}</span>
+                <div className="bg-slate-900 text-white rounded-md px-5 py-4 flex justify-between items-center mt-2">
+                  <span className="text-xs font-bold uppercase tracking-widest text-slate-300">TOTAL DUE</span>
+                  <span className="text-xl font-black">{fmt(form.getValues("invoice.totalAmount"))}</span>
                 </div>
 
                 {/* Deposit Requested */}
