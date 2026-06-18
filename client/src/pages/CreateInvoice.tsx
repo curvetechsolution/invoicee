@@ -302,21 +302,21 @@ export default function CreateInvoice({ params }: { params?: { id?: string } }) 
 
         {/* Invoice paper */}
         <div className="max-w-4xl mx-auto bg-white shadow-sm print:shadow-none print:max-w-none">
-          <div className="px-10 py-10 space-y-0">
+          <div className="px-8 py-8 space-y-0">
 
             {/* ── TOP HEADER: Logo+Company left, INVOICE right ── */}
             <div className="flex items-center justify-between pb-6">
               {/* Left: logo + company name + contact */}
               <div className="flex items-center gap-4">
-                <img src={logoImg} alt="Logo" className="w-16 h-16 object-contain" />
+                <img src={logoImg} alt="Logo" className="w-12 h-12 object-contain" />
                 <div>
-                  <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight leading-tight">Curve Tech Solution</h2>
-                  <p className="text-sm text-slate-500 mt-0.5">hello@curvetechsolution.online</p>
-                  <p className="text-sm text-slate-500">www.curvetechsolution.online</p>
+                  <h2 className="text-xl font-extrabold text-slate-900 tracking-tight leading-tight">Curve Tech Solution</h2>
+                  <p className="text-xs text-slate-500 mt-0.5">hello@curvetechsolution.online</p>
+                  <p className="text-xs text-slate-500">www.curvetechsolution.online</p>
                 </div>
               </div>
               {/* Right: INVOICE big heading */}
-              <h1 className="text-7xl font-black text-slate-900 tracking-widest uppercase">INVOICE</h1>
+              <h1 className="text-5xl font-black text-slate-900 tracking-widest uppercase">INVOICE</h1>
             </div>
 
             {/* ── THIN DIVIDER ── */}
@@ -350,7 +350,7 @@ export default function CreateInvoice({ params }: { params?: { id?: string } }) 
                   {/* Invoice Number label — left col */}
                   <div className="text-right">
                     <p className="text-xs text-slate-400 uppercase tracking-widest font-semibold mb-1">Invoice Number</p>
-                    <p className="text-3xl font-black text-slate-900">#{form.getValues("invoice.invoiceNumber")}</p>
+                    <p className="text-xl font-black text-slate-900">#{form.getValues("invoice.invoiceNumber")}</p>
                   </div>
                   {/* Bill To — right col */}
                   <div className="text-right">
@@ -439,7 +439,7 @@ export default function CreateInvoice({ params }: { params?: { id?: string } }) 
                 {/* Total Due — dark filled box */}
                 <div className="bg-slate-800 text-white rounded-md px-5 py-4 flex justify-between items-center mt-3">
                   <span className="text-xs font-bold uppercase tracking-widest text-slate-300">Total Due</span>
-                  <span className="text-2xl font-black tracking-tight">{fmt(form.getValues("invoice.totalAmount"))}</span>
+                  <span className="text-xl font-black tracking-tight">{fmt(form.getValues("invoice.totalAmount"))}</span>
                 </div>
 
                 {/* Deposit Requested */}
