@@ -79,10 +79,14 @@
 
 /* ── INVOICE PRINT STYLES ─────────────────────────────────── */
 @media print {
-  /* Force white background everywhere */
   *, *::before, *::after {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
+  }
+
+  @page {
+    size: A4 portrait;
+    margin: 1.5cm;
   }
 
   html, body {
@@ -91,80 +95,60 @@
     padding: 0 !important;
   }
 
-  @page {
-    size: A4 portrait;
-    margin: 1.5cm;
+  /* Hide action bar — Invoice Preview heading + Print/Edit buttons */
+  #invoice-action-bar {
+    display: none !important;
+    visibility: hidden !important;
   }
 
-  /* ✅ Hide action bar (Invoice Preview heading + buttons) */
-  #invoice-action-bar {
+  /* Hide any element with print:hidden tailwind class */
+  [class*="print:hidden"] {
     display: none !important;
   }
 
-  /* Invoice paper — full page width */
-  #invoice-print-root > .max-w-4xl {
+  /* Outer wrapper */
+  #invoice-print-root {
+    background: white !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    min-height: unset !important;
+  }
+
+  /* Invoice paper — full width, no shadow */
+  #invoice-print-root .max-w-4xl {
     max-width: 100% !important;
     margin: 0 !important;
     padding: 0 !important;
     box-shadow: none !important;
   }
 
-  /* Flex layout must be preserved */
-  #invoice-print-root .flex {
-    display: flex !important;
-  }
-  #invoice-print-root .flex-col {
-    flex-direction: column !important;
-  }
-  #invoice-print-root .items-start {
-    align-items: flex-start !important;
-  }
-  #invoice-print-root .items-center {
-    align-items: center !important;
-  }
-  #invoice-print-root .justify-between {
-    justify-content: space-between !important;
-  }
-  #invoice-print-root .justify-end {
-    justify-content: flex-end !important;
-  }
-  #invoice-print-root .shrink-0 {
-    flex-shrink: 0 !important;
-  }
-  #invoice-print-root .flex-1 {
-    flex: 1 1 0% !important;
-  }
+  /* Flex layout */
+  #invoice-print-root .flex { display: flex !important; }
+  #invoice-print-root .flex-col { flex-direction: column !important; }
+  #invoice-print-root .items-start { align-items: flex-start !important; }
+  #invoice-print-root .items-center { align-items: center !important; }
+  #invoice-print-root .justify-between { justify-content: space-between !important; }
+  #invoice-print-root .justify-end { justify-content: flex-end !important; }
+  #invoice-print-root .shrink-0 { flex-shrink: 0 !important; }
+  #invoice-print-root .flex-1 { flex: 1 1 0% !important; }
 
-  /* Grid must be preserved */
-  #invoice-print-root .grid {
-    display: grid !important;
-  }
-  #invoice-print-root .grid-cols-2 {
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-  }
+  /* Grid */
+  #invoice-print-root .grid { display: grid !important; }
+  #invoice-print-root .grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
 
-  /* Table must stay full-width */
-  #invoice-print-root table {
-    width: 100% !important;
-    border-collapse: collapse !important;
-  }
-  #invoice-print-root tr,
-  #invoice-print-root th,
-  #invoice-print-root td {
+  /* Table */
+  #invoice-print-root table { width: 100% !important; border-collapse: collapse !important; }
+  #invoice-print-root tr, #invoice-print-root th, #invoice-print-root td {
     page-break-inside: avoid !important;
   }
 
-  /* Preserve dark total box */
-  #invoice-print-root .bg-slate-900 {
-    background-color: #0f172a !important;
-    color: #ffffff !important;
-  }
-  #invoice-print-root .bg-slate-50 {
-    background-color: #f8fafc !important;
-  }
+  /* Colors */
+  #invoice-print-root .bg-slate-900 { background-color: #0f172a !important; }
+  #invoice-print-root .bg-slate-50  { background-color: #f8fafc !important; }
+  #invoice-print-root .text-white     { color: #ffffff !important; }
+  #invoice-print-root .text-red-500   { color: #ef4444 !important; }
+  #invoice-print-root .text-slate-300 { color: #cbd5e1 !important; }
 
-  /* Keep totals panel width */
-  #invoice-print-root .w-72 {
-    width: 18rem !important;
-  }
+  /* Totals panel width */
+  #invoice-print-root .w-72 { width: 18rem !important; }
 }
