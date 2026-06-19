@@ -285,63 +285,65 @@ export default function CreateInvoice({ params }: { params?: { id?: string } }) 
     const fmt = (val: any) => `${currency} ${Number(val || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
     return (
-      <div id="invoice-print-root" className="min-h-screen bg-slate-100 p-4 md:p-8 print:p-0 print:bg-white">
+      <div id="invoice-print-root" style={{ minHeight: "100vh", background: "#f1f5f9", padding: "24px 16px", boxSizing: "border-box" }} className="print:p-0 print:bg-white">
+
         {/* Action bar — hidden on print */}
-        <div id="invoice-action-bar" className="max-w-4xl mx-auto mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 print:hidden">
-          <div className="flex items-center gap-3">
+        <div id="invoice-action-bar" style={{ maxWidth: "1050px", margin: "0 auto 16px auto", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", flexWrap: "wrap" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <Link href="/invoices">
               <Button variant="ghost" size="icon"><ArrowLeft className="w-5 h-5" /></Button>
             </Link>
-            <h1 className="text-lg font-semibold text-slate-700">Invoice Preview</h1>
+            <h1 style={{ fontSize: "1rem", fontWeight: 600, color: "#334155", margin: 0 }}>Invoice Preview</h1>
           </div>
-          <div className="flex gap-2 w-full sm:w-auto">
-            <Button variant="outline" className="flex-1 sm:flex-none text-sm" onClick={() => {
-              window.print();
-            }}>Print / Download PDF</Button>
-            <Button className="flex-1 sm:flex-none text-sm" onClick={() => setLocation(`/invoices/${params?.id}/edit`)}>Edit Invoice</Button>
+          <div style={{ display: "flex", gap: "8px", flexShrink: 0 }}>
+            <Button variant="outline" style={{ fontSize: "0.875rem" }} onClick={() => window.print()}>Print / Download PDF</Button>
+            <Button style={{ fontSize: "0.875rem" }} onClick={() => setLocation(`/invoices/${params?.id}/edit`)}>Edit Invoice</Button>
           </div>
         </div>
 
-        {/* Invoice paper — single page, pixel-perfect match to PDF 2 */}
+        {/* ── INVOICE PAPER — matches PDF 2 exactly ── */}
         <div id="invoice-paper" style={{
-          maxWidth: "860px",
+          maxWidth: "1050px",
           margin: "0 auto",
           background: "#ffffff",
-          boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+          boxShadow: "0 2px 12px rgba(0,0,0,0.09)",
           fontFamily: "'Inter','Helvetica Neue',Arial,sans-serif",
+          borderRadius: "4px",
         }}>
-          <div style={{ padding: "44px 52px" }}>
+          <div style={{ padding: "52px 64px" }}>
 
-            {/* TOP HEADER: Logo + Company (left) | INVOICE (right) */}
-            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "24px" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "16px", flexShrink: 0 }}>
-                <img src={logoImg} alt="Logo" style={{ width: "60px", height: "60px", objectFit: "contain", flexShrink: 0 }} />
-                <div style={{ whiteSpace: "nowrap" }}>
-                  <div style={{ fontSize: "1.35rem", fontWeight: 800, color: "#0f172a", lineHeight: 1.2 }}>Curve Tech Solution</div>
-                  <div style={{ fontSize: "0.8rem", color: "#64748b", marginTop: "5px", lineHeight: 1.5 }}>hello@curvetechsolution.online</div>
-                  <div style={{ fontSize: "0.8rem", color: "#64748b", lineHeight: 1.5 }}>www.curvetechsolution.online</div>
+            {/* ── TOP HEADER: Logo + Company LEFT | INVOICE RIGHT ── */}
+            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "32px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "18px" }}>
+                <img src={logoImg} alt="Logo" style={{ width: "68px", height: "68px", objectFit: "contain", flexShrink: 0 }} />
+                <div>
+                  <div style={{ fontSize: "1.5rem", fontWeight: 800, color: "#0f172a", lineHeight: 1.15, whiteSpace: "nowrap" }}>Curve Tech Solution</div>
+                  <div style={{ fontSize: "0.84rem", color: "#64748b", marginTop: "6px", lineHeight: 1.55 }}>hello@curvetechsolution.online</div>
+                  <div style={{ fontSize: "0.84rem", color: "#64748b", lineHeight: 1.55 }}>www.curvetechsolution.online</div>
                 </div>
               </div>
-              <div style={{ fontSize: "3.25rem", fontWeight: 900, color: "#0f172a", letterSpacing: "0.12em", lineHeight: 1, whiteSpace: "nowrap", flexShrink: 0 }}>INVOICE</div>
+              <div style={{ fontSize: "3.8rem", fontWeight: 900, color: "#0f172a", letterSpacing: "0.13em", lineHeight: 1, whiteSpace: "nowrap" }}>INVOICE</div>
             </div>
 
-            {/* DIVIDER */}
-            <div style={{ borderTop: "1px solid #e2e8f0", marginBottom: "20px" }} />
+            {/* ── DIVIDER ── */}
+            <div style={{ borderTop: "1.5px solid #e2e8f0", marginBottom: "28px" }} />
 
-            {/* OFFICES (left) + META (right) */}
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "24px" }}>
-              <div style={{ display: "flex", gap: "44px" }}>
+            {/* ── OFFICES (left) + META GRID (right) ── */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "32px" }}>
+
+              {/* Left: USA + Pakistan side by side */}
+              <div style={{ display: "flex", gap: "60px" }}>
                 <div>
-                  <div style={{ fontSize: "0.6rem", fontWeight: 700, textTransform: "uppercase" as const, letterSpacing: "0.09em", color: "#0f172a", marginBottom: "7px" }}>USA OFFICE</div>
-                  <div style={{ fontSize: "0.78rem", color: "#475569", lineHeight: 1.65, whiteSpace: "nowrap" }}>
+                  <div style={{ fontSize: "0.65rem", fontWeight: 700, textTransform: "uppercase" as const, letterSpacing: "0.1em", color: "#0f172a", marginBottom: "10px" }}>USA OFFICE</div>
+                  <div style={{ fontSize: "0.82rem", color: "#475569", lineHeight: 1.7, whiteSpace: "nowrap" }}>
                     117 South Lexington Street,<br />
                     Ste 100, Harrisonville, MO<br />
                     64701, USA
                   </div>
                 </div>
                 <div>
-                  <div style={{ fontSize: "0.6rem", fontWeight: 700, textTransform: "uppercase" as const, letterSpacing: "0.09em", color: "#0f172a", marginBottom: "7px" }}>PAKISTAN OFFICE</div>
-                  <div style={{ fontSize: "0.78rem", color: "#475569", lineHeight: 1.65, whiteSpace: "nowrap" }}>
+                  <div style={{ fontSize: "0.65rem", fontWeight: 700, textTransform: "uppercase" as const, letterSpacing: "0.1em", color: "#0f172a", marginBottom: "10px" }}>PAKISTAN OFFICE</div>
+                  <div style={{ fontSize: "0.82rem", color: "#475569", lineHeight: 1.7, whiteSpace: "nowrap" }}>
                     Office No 4, First Floor, Tariq<br />
                     Business Center, Block H-3,<br />
                     Johar Town, Lahore, 54000
@@ -349,81 +351,85 @@ export default function CreateInvoice({ params }: { params?: { id?: string } }) 
                 </div>
               </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "auto auto", columnGap: "36px", rowGap: "14px", textAlign: "right" as const, flexShrink: 0 }}>
+              {/* Right: 2×2 meta grid — all right-aligned */}
+              <div style={{ display: "grid", gridTemplateColumns: "auto auto", columnGap: "48px", rowGap: "18px", textAlign: "right" as const, flexShrink: 0 }}>
                 <div>
-                  <div style={{ fontSize: "0.58rem", fontWeight: 600, textTransform: "uppercase" as const, letterSpacing: "0.1em", color: "#94a3b8", marginBottom: "3px", whiteSpace: "nowrap" }}>INVOICE NUMBER</div>
-                  <div style={{ fontSize: "1.45rem", fontWeight: 900, color: "#0f172a", whiteSpace: "nowrap" }}>#{form.getValues("invoice.invoiceNumber")}</div>
+                  <div style={{ fontSize: "0.62rem", fontWeight: 600, textTransform: "uppercase" as const, letterSpacing: "0.1em", color: "#94a3b8", marginBottom: "4px", whiteSpace: "nowrap" }}>INVOICE NUMBER</div>
+                  <div style={{ fontSize: "1.6rem", fontWeight: 900, color: "#0f172a", whiteSpace: "nowrap" }}>#{form.getValues("invoice.invoiceNumber")}</div>
                 </div>
                 <div>
-                  <div style={{ fontSize: "0.58rem", fontWeight: 600, textTransform: "uppercase" as const, letterSpacing: "0.1em", color: "#94a3b8", marginBottom: "3px", whiteSpace: "nowrap" }}>BILL TO</div>
-                  <div style={{ fontSize: "0.9rem", fontWeight: 700, color: "#0f172a" }}>{form.getValues("invoice.clientName")}</div>
-                  {form.getValues("invoice.clientEmail") && <div style={{ fontSize: "0.72rem", color: "#64748b", marginTop: "2px" }}>{form.getValues("invoice.clientEmail")}</div>}
-                  {form.getValues("invoice.clientPhone") && <div style={{ fontSize: "0.72rem", color: "#64748b" }}>{form.getValues("invoice.clientPhone")}</div>}
+                  <div style={{ fontSize: "0.62rem", fontWeight: 600, textTransform: "uppercase" as const, letterSpacing: "0.1em", color: "#94a3b8", marginBottom: "4px", whiteSpace: "nowrap" }}>BILL TO</div>
+                  <div style={{ fontSize: "1rem", fontWeight: 700, color: "#0f172a" }}>{form.getValues("invoice.clientName")}</div>
+                  {form.getValues("invoice.clientEmail") && <div style={{ fontSize: "0.78rem", color: "#64748b", marginTop: "3px" }}>{form.getValues("invoice.clientEmail")}</div>}
+                  {form.getValues("invoice.clientPhone") && <div style={{ fontSize: "0.78rem", color: "#64748b" }}>{form.getValues("invoice.clientPhone")}</div>}
                 </div>
                 <div>
-                  <div style={{ fontSize: "0.58rem", fontWeight: 600, textTransform: "uppercase" as const, letterSpacing: "0.1em", color: "#94a3b8", marginBottom: "3px", whiteSpace: "nowrap" }}>ISSUE DATE</div>
-                  <div style={{ fontSize: "0.84rem", fontWeight: 500, color: "#334155", whiteSpace: "nowrap" }}>{form.getValues("invoice.issueDate") ? format(new Date(form.getValues("invoice.issueDate") as any), "MMM d, yyyy") : ""}</div>
+                  <div style={{ fontSize: "0.62rem", fontWeight: 600, textTransform: "uppercase" as const, letterSpacing: "0.1em", color: "#94a3b8", marginBottom: "4px", whiteSpace: "nowrap" }}>ISSUE DATE</div>
+                  <div style={{ fontSize: "0.9rem", fontWeight: 500, color: "#334155", whiteSpace: "nowrap" }}>{form.getValues("invoice.issueDate") ? format(new Date(form.getValues("invoice.issueDate") as any), "MMM d, yyyy") : ""}</div>
                 </div>
                 <div>
-                  <div style={{ fontSize: "0.58rem", fontWeight: 600, textTransform: "uppercase" as const, letterSpacing: "0.1em", color: "#94a3b8", marginBottom: "3px", whiteSpace: "nowrap" }}>DUE DATE</div>
-                  <div style={{ fontSize: "0.84rem", fontWeight: 700, color: "#ef4444", whiteSpace: "nowrap" }}>{form.getValues("invoice.dueDate") ? format(new Date(form.getValues("invoice.dueDate") as any), "MMM d, yyyy") : ""}</div>
+                  <div style={{ fontSize: "0.62rem", fontWeight: 600, textTransform: "uppercase" as const, letterSpacing: "0.1em", color: "#94a3b8", marginBottom: "4px", whiteSpace: "nowrap" }}>DUE DATE</div>
+                  <div style={{ fontSize: "0.9rem", fontWeight: 700, color: "#ef4444", whiteSpace: "nowrap" }}>{form.getValues("invoice.dueDate") ? format(new Date(form.getValues("invoice.dueDate") as any), "MMM d, yyyy") : ""}</div>
                 </div>
               </div>
             </div>
 
-            {/* DIVIDER before table */}
-            <div style={{ borderTop: "1px solid #e2e8f0", marginBottom: "18px" }} />
+            {/* ── DIVIDER before table ── */}
+            <div style={{ borderTop: "1.5px solid #e2e8f0", marginBottom: "22px" }} />
 
-            {/* ITEMS TABLE */}
-            <div style={{ border: "1px solid #e2e8f0", borderRadius: "8px", overflow: "hidden", marginBottom: "24px" }}>
-              <table style={{ width: "100%", borderCollapse: "collapse" as const, fontSize: "0.84rem" }}>
+            {/* ── ITEMS TABLE ── */}
+            <div style={{ border: "1px solid #e2e8f0", borderRadius: "10px", overflow: "hidden", marginBottom: "32px" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse" as const, fontSize: "0.88rem" }}>
                 <thead>
                   <tr style={{ borderBottom: "1px solid #e2e8f0", background: "#ffffff" }}>
-                    <th style={{ padding: "12px 18px", textAlign: "left" as const, fontSize: "0.65rem", fontWeight: 700, color: "#64748b", textTransform: "uppercase" as const, letterSpacing: "0.08em" }}>Description</th>
-                    <th style={{ padding: "12px 18px", textAlign: "center" as const, fontSize: "0.65rem", fontWeight: 700, color: "#64748b", textTransform: "uppercase" as const, letterSpacing: "0.08em", width: "120px", whiteSpace: "nowrap" }}>Price</th>
-                    <th style={{ padding: "12px 18px", textAlign: "center" as const, fontSize: "0.65rem", fontWeight: 700, color: "#64748b", textTransform: "uppercase" as const, letterSpacing: "0.08em", width: "110px", whiteSpace: "nowrap" }}>Discount</th>
-                    <th style={{ padding: "12px 18px", textAlign: "right" as const, fontSize: "0.65rem", fontWeight: 700, color: "#64748b", textTransform: "uppercase" as const, letterSpacing: "0.08em", width: "140px", whiteSpace: "nowrap" }}>Total</th>
+                    <th style={{ padding: "14px 22px", textAlign: "left" as const, fontSize: "0.68rem", fontWeight: 700, color: "#64748b", textTransform: "uppercase" as const, letterSpacing: "0.09em" }}>Description</th>
+                    <th style={{ padding: "14px 22px", textAlign: "center" as const, fontSize: "0.68rem", fontWeight: 700, color: "#64748b", textTransform: "uppercase" as const, letterSpacing: "0.09em", width: "140px", whiteSpace: "nowrap" }}>Price</th>
+                    <th style={{ padding: "14px 22px", textAlign: "center" as const, fontSize: "0.68rem", fontWeight: 700, color: "#64748b", textTransform: "uppercase" as const, letterSpacing: "0.09em", width: "130px", whiteSpace: "nowrap" }}>Discount</th>
+                    <th style={{ padding: "14px 22px", textAlign: "right" as const, fontSize: "0.68rem", fontWeight: 700, color: "#64748b", textTransform: "uppercase" as const, letterSpacing: "0.09em", width: "160px", whiteSpace: "nowrap" }}>Total</th>
                   </tr>
                 </thead>
                 <tbody>
                   {watchedItems.map((item, idx) => (
                     <tr key={idx} style={{ borderBottom: idx < watchedItems.length - 1 ? "1px solid #f1f5f9" : "none", background: "#f8fafc" }}>
-                      <td style={{ padding: "18px", verticalAlign: "top" }}>
-                        <div style={{ fontWeight: 700, color: "#0f172a", fontSize: "0.84rem" }}>{item.title}</div>
-                        {item.description && <div style={{ color: "#64748b", fontSize: "0.76rem", marginTop: "4px", lineHeight: 1.5 }}>{item.description}</div>}
+                      <td style={{ padding: "22px", verticalAlign: "top" }}>
+                        <div style={{ fontWeight: 700, color: "#0f172a", fontSize: "0.88rem" }}>{item.title}</div>
+                        {item.description && <div style={{ color: "#64748b", fontSize: "0.78rem", marginTop: "5px", lineHeight: 1.55 }}>{item.description}</div>}
                       </td>
-                      <td style={{ padding: "18px", textAlign: "center" as const, color: "#475569", verticalAlign: "top", whiteSpace: "nowrap" }}>{currency} {Number(item.price || 0).toLocaleString()}</td>
-                      <td style={{ padding: "18px", textAlign: "center" as const, color: "#64748b", verticalAlign: "top", whiteSpace: "nowrap" }}>
+                      <td style={{ padding: "22px", textAlign: "center" as const, color: "#475569", verticalAlign: "top", whiteSpace: "nowrap" }}>{currency} {Number(item.price || 0).toLocaleString()}</td>
+                      <td style={{ padding: "22px", textAlign: "center" as const, color: "#64748b", verticalAlign: "top", whiteSpace: "nowrap" }}>
                         {item.discountValue && Number(item.discountValue) > 0
                           ? (item.discountType === "percentage" ? `${item.discountValue}%` : `${currency} ${item.discountValue}`)
                           : "–"}
                       </td>
-                      <td style={{ padding: "18px", textAlign: "right" as const, fontWeight: 700, color: "#0f172a", verticalAlign: "top", whiteSpace: "nowrap" }}>{fmt(item.total)}</td>
+                      <td style={{ padding: "22px", textAlign: "right" as const, fontWeight: 700, color: "#0f172a", verticalAlign: "top", whiteSpace: "nowrap" }}>{fmt(item.total)}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
 
-            {/* BOTTOM: Terms left, totals right */}
-            <div style={{ display: "flex", justifyContent: "space-between", gap: "36px", alignItems: "flex-start" }}>
-              {form.getValues("invoice.description") && (
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: "0.6rem", fontWeight: 700, textTransform: "uppercase" as const, letterSpacing: "0.1em", color: "#94a3b8", marginBottom: "7px" }}>Terms &amp; Conditions</div>
-                  <div style={{ fontSize: "0.76rem", color: "#64748b", lineHeight: 1.6, whiteSpace: "pre-wrap" }}>{form.getValues("invoice.description")}</div>
-                </div>
-              )}
+            {/* ── BOTTOM: Terms LEFT | Totals RIGHT (right-edge aligned like PDF 2) ── */}
+            <div style={{ display: "flex", justifyContent: "space-between", gap: "48px", alignItems: "flex-start" }}>
 
-              <div style={{ width: "270px", flexShrink: 0 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "7px 0", borderBottom: "1px solid #e2e8f0" }}>
-                  <span style={{ fontSize: "0.84rem", color: "#64748b" }}>Subtotal</span>
-                  <span style={{ fontSize: "0.84rem", color: "#1e293b" }}>{fmt(form.getValues("invoice.subtotal"))}</span>
+              {/* Terms & Conditions */}
+              {form.getValues("invoice.description") ? (
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: "0.62rem", fontWeight: 700, textTransform: "uppercase" as const, letterSpacing: "0.1em", color: "#94a3b8", marginBottom: "8px" }}>Terms &amp; Conditions</div>
+                  <div style={{ fontSize: "0.8rem", color: "#64748b", lineHeight: 1.65, whiteSpace: "pre-wrap" }}>{form.getValues("invoice.description")}</div>
+                </div>
+              ) : <div style={{ flex: 1 }} />}
+
+              {/* Totals panel — right-edge, 320px wide like PDF 2 */}
+              <div style={{ width: "320px", flexShrink: 0 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "9px 0", borderBottom: "1px solid #e2e8f0" }}>
+                  <span style={{ fontSize: "0.88rem", color: "#94a3b8" }}>Subtotal</span>
+                  <span style={{ fontSize: "0.88rem", color: "#1e293b" }}>{fmt(form.getValues("invoice.subtotal"))}</span>
                 </div>
 
                 {Number(form.getValues("invoice.subtotalDiscountValue")) > 0 && (
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "7px 0", borderBottom: "1px solid #e2e8f0" }}>
-                    <span style={{ fontSize: "0.84rem", color: "#64748b" }}>Discount</span>
-                    <span style={{ fontSize: "0.84rem", color: "#1e293b" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "9px 0", borderBottom: "1px solid #e2e8f0" }}>
+                    <span style={{ fontSize: "0.88rem", color: "#94a3b8" }}>Discount</span>
+                    <span style={{ fontSize: "0.88rem", color: "#1e293b" }}>
                       {form.getValues("invoice.subtotalDiscountType") === "percentage"
                         ? `${form.getValues("invoice.subtotalDiscountValue")}%`
                         : fmt(form.getValues("invoice.subtotalDiscountValue"))}
@@ -432,9 +438,9 @@ export default function CreateInvoice({ params }: { params?: { id?: string } }) 
                 )}
 
                 {Number(form.getValues("invoice.taxValue")) > 0 && (
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "7px 0", borderBottom: "1px solid #e2e8f0" }}>
-                    <span style={{ fontSize: "0.84rem", color: "#64748b" }}>Tax</span>
-                    <span style={{ fontSize: "0.84rem", color: "#1e293b" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "9px 0", borderBottom: "1px solid #e2e8f0" }}>
+                    <span style={{ fontSize: "0.88rem", color: "#94a3b8" }}>Tax</span>
+                    <span style={{ fontSize: "0.88rem", color: "#1e293b" }}>
                       {form.getValues("invoice.taxType") === "percentage"
                         ? `${form.getValues("invoice.taxValue")}%`
                         : fmt(form.getValues("invoice.taxValue"))}
@@ -442,29 +448,30 @@ export default function CreateInvoice({ params }: { params?: { id?: string } }) 
                   </div>
                 )}
 
-                <div style={{ background: "#0f172a", color: "#ffffff", borderRadius: "6px", padding: "13px 18px", display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "7px" }}>
-                  <span style={{ fontSize: "0.65rem", fontWeight: 700, textTransform: "uppercase" as const, letterSpacing: "0.12em", color: "#cbd5e1", whiteSpace: "nowrap" }}>TOTAL DUE</span>
-                  <span style={{ fontSize: "1.2rem", fontWeight: 900, color: "#ffffff", whiteSpace: "nowrap" }}>{fmt(form.getValues("invoice.totalAmount"))}</span>
+                {/* TOTAL DUE — full-width dark box like PDF 2 */}
+                <div style={{ background: "#0f172a", color: "#ffffff", borderRadius: "8px", padding: "16px 22px", display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "10px" }}>
+                  <span style={{ fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase" as const, letterSpacing: "0.13em", color: "#cbd5e1", whiteSpace: "nowrap" }}>TOTAL DUE</span>
+                  <span style={{ fontSize: "1.35rem", fontWeight: 900, color: "#ffffff", whiteSpace: "nowrap" }}>{fmt(form.getValues("invoice.totalAmount"))}</span>
                 </div>
 
                 {Number(form.getValues("invoice.depositRequested")) > 0 && (
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: "9px" }}>
-                    <span style={{ fontSize: "0.84rem", color: "#64748b" }}>Deposit Requested</span>
-                    <span style={{ fontSize: "0.84rem", fontWeight: 700, color: "#1e293b" }}>{fmt(form.getValues("invoice.depositRequested"))}</span>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: "11px" }}>
+                    <span style={{ fontSize: "0.88rem", color: "#64748b" }}>Deposit Requested</span>
+                    <span style={{ fontSize: "0.88rem", fontWeight: 700, color: "#1e293b" }}>{fmt(form.getValues("invoice.depositRequested"))}</span>
                   </div>
                 )}
 
                 {Number(form.getValues("invoice.paidAmount")) > 0 && (
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: "5px" }}>
-                    <span style={{ fontSize: "0.84rem", color: "#64748b" }}>Amount Paid</span>
-                    <span style={{ fontSize: "0.84rem", fontWeight: 700, color: "#1e293b" }}>{fmt(form.getValues("invoice.paidAmount"))}</span>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: "6px" }}>
+                    <span style={{ fontSize: "0.88rem", color: "#64748b" }}>Amount Paid</span>
+                    <span style={{ fontSize: "0.88rem", fontWeight: 700, color: "#1e293b" }}>{fmt(form.getValues("invoice.paidAmount"))}</span>
                   </div>
                 )}
 
                 {Number(form.getValues("invoice.paidAmount")) > 0 && (
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: "9px", marginTop: "5px", borderTop: "1px solid #e2e8f0" }}>
-                    <span style={{ fontSize: "0.84rem", fontWeight: 700, color: "#334155" }}>Remaining Balance</span>
-                    <span style={{ fontSize: "0.84rem", fontWeight: 900, color: "#0f172a" }}>{fmt(form.getValues("invoice.payableAmount"))}</span>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: "11px", marginTop: "6px", borderTop: "1px solid #e2e8f0" }}>
+                    <span style={{ fontSize: "0.88rem", fontWeight: 700, color: "#334155" }}>Remaining Balance</span>
+                    <span style={{ fontSize: "0.88rem", fontWeight: 900, color: "#0f172a" }}>{fmt(form.getValues("invoice.payableAmount"))}</span>
                   </div>
                 )}
               </div>
@@ -476,16 +483,19 @@ export default function CreateInvoice({ params }: { params?: { id?: string } }) 
         <style dangerouslySetInnerHTML={{ __html: `
           @media print {
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-            @page { size: A4 portrait; margin: 0.7cm 0.9cm; }
+            @page { size: A4 landscape; margin: 1cm 1.2cm; }
             html, body { background: white !important; margin: 0 !important; padding: 0 !important; }
             #invoice-action-bar { display: none !important; }
             #invoice-print-root { background: white !important; padding: 0 !important; margin: 0 !important; min-height: unset !important; }
-            #invoice-paper { max-width: 100% !important; width: 100% !important; margin: 0 !important; box-shadow: none !important; }
+            #invoice-paper { max-width: 100% !important; width: 100% !important; margin: 0 !important; box-shadow: none !important; border-radius: 0 !important; }
             #invoice-paper * { page-break-inside: avoid !important; }
             #invoice-paper table { width: 100% !important; border-collapse: collapse !important; }
           }
         ` }} />
       </div>
+    );
+  }
+
     );
   }
 
