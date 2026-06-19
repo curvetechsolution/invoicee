@@ -285,33 +285,32 @@ export default function CreateInvoice({ params }: { params?: { id?: string } }) 
     const fmt = (val: any) => `${currency} ${Number(val || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
     return (
-      <div id="invoice-print-root" style={{ minHeight: "100vh", background: "#f1f5f9", padding: "24px 0", boxSizing: "border-box" }} className="print:p-0 print:bg-white">
+      <div id="invoice-print-root" style={{ minHeight: "100vh", background: "#f1f5f9", padding: "24px", boxSizing: "border-box" }} className="print:p-0 print:bg-white">
 
         {/* Action bar — hidden on print */}
-        <div id="invoice-action-bar" style={{ maxWidth: "1122px", margin: "0 auto 16px auto", padding: "0 24px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", flexWrap: "wrap" }}>
+        <div id="invoice-action-bar" style={{ maxWidth: "1050px", margin: "0 auto 16px auto", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", flexWrap: "wrap" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <Link href="/invoices">
               <Button variant="ghost" size="icon"><ArrowLeft className="w-5 h-5" /></Button>
             </Link>
             <h1 style={{ fontSize: "1rem", fontWeight: 600, color: "#334155", margin: 0 }}>Invoice Preview</h1>
           </div>
-          <div style={{ display: "flex", gap: "8px", alignItems: "center", flexShrink: 0 }}>
+          <div style={{ display: "flex", gap: "8px", flexShrink: 0 }}>
             <Button variant="outline" style={{ fontSize: "0.875rem" }} onClick={() => window.print()}>Print / Download PDF</Button>
             <Button style={{ fontSize: "0.875rem" }} onClick={() => setLocation(`/invoices/${params?.id}/edit`)}>Edit Invoice</Button>
           </div>
         </div>
 
-        {/* ── INVOICE PAPER — landscape A4 proportions like PDF 2 ── */}
+        {/* ── INVOICE PAPER — matches PDF 2 exactly ── */}
         <div id="invoice-paper" style={{
-          maxWidth: "1122px",
-          width: "100%",
+          maxWidth: "1180px",
           margin: "0 auto",
           background: "#ffffff",
           boxShadow: "0 2px 12px rgba(0,0,0,0.09)",
           fontFamily: "'Inter','Helvetica Neue',Arial,sans-serif",
           borderRadius: "4px",
         }}>
-          <div style={{ padding: "48px 60px" }}>
+          <div style={{ padding: "48px 56px" }}>
 
             {/* ── TOP HEADER: Logo + Company LEFT | INVOICE RIGHT ── */}
             <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "32px" }}>
@@ -323,7 +322,7 @@ export default function CreateInvoice({ params }: { params?: { id?: string } }) 
                   <div style={{ fontSize: "0.84rem", color: "#64748b", lineHeight: 1.55 }}>www.curvetechsolution.online</div>
                 </div>
               </div>
-              <div style={{ fontSize: "4.5rem", fontWeight: 900, color: "#0f172a", letterSpacing: "0.13em", lineHeight: 1, whiteSpace: "nowrap" }}>INVOICE</div>
+              <div style={{ fontSize: "3.8rem", fontWeight: 900, color: "#0f172a", letterSpacing: "0.13em", lineHeight: 1, whiteSpace: "nowrap" }}>INVOICE</div>
             </div>
 
             {/* ── DIVIDER ── */}
@@ -484,20 +483,17 @@ export default function CreateInvoice({ params }: { params?: { id?: string } }) 
         <style dangerouslySetInnerHTML={{ __html: `
           @media print {
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-            @page { size: A4 landscape; margin: 0.6cm 0.8cm; }
+            @page { size: landscape; margin: 0.6cm 0.8cm; }
             html, body { background: white !important; margin: 0 !important; padding: 0 !important; }
             #invoice-action-bar { display: none !important; }
             #invoice-print-root { background: white !important; padding: 0 !important; margin: 0 !important; min-height: unset !important; }
             #invoice-paper { max-width: 100% !important; width: 100% !important; margin: 0 !important; box-shadow: none !important; border-radius: 0 !important; }
-            #invoice-paper > div { padding: 28px 36px !important; }
+            #invoice-paper > div { padding: 24px 32px !important; }
             #invoice-paper * { page-break-inside: avoid !important; }
             #invoice-paper table { width: 100% !important; border-collapse: collapse !important; }
           }
         ` }} />
       </div>
-    );
-  }
-
     );
   }
 
