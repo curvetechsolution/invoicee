@@ -287,7 +287,7 @@ export default function CreateInvoice({ params }: { params?: { id?: string } }) 
     return (
       <div id="invoice-print-root" className="min-h-screen bg-slate-100 p-4 md:p-8 print:p-0 print:bg-white">
         {/* Action bar — hidden on print */}
-        <div className="max-w-4xl mx-auto mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 print:hidden">
+        <div id="invoice-action-bar" className="max-w-4xl mx-auto mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 print:hidden">
           <div className="flex items-center gap-3">
             <Link href="/invoices">
               <Button variant="ghost" size="icon"><ArrowLeft className="w-5 h-5" /></Button>
@@ -485,11 +485,14 @@ export default function CreateInvoice({ params }: { params?: { id?: string } }) 
 
         <style dangerouslySetInnerHTML={{ __html: `
           @media print {
-            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            * {
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
 
             @page {
               size: A4 portrait;
-              margin: 0;
+              margin: 1.5cm;
             }
 
             html, body {
@@ -499,13 +502,15 @@ export default function CreateInvoice({ params }: { params?: { id?: string } }) 
               width: 100% !important;
             }
 
-            /* Hide action bar (buttons) */
-            .print\\:hidden { display: none !important; }
+            /* ✅ Hide action bar by ID — most reliable method */
+            #invoice-action-bar {
+              display: none !important;
+            }
 
             /* Outer wrapper */
             #invoice-print-root {
               background: white !important;
-              padding: 1.5cm !important;
+              padding: 0 !important;
               margin: 0 !important;
               min-height: unset !important;
             }
