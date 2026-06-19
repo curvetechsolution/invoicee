@@ -93,7 +93,12 @@
 
   @page {
     size: A4 portrait;
-    margin: 1.2cm 1.5cm;
+    margin: 1.5cm;
+  }
+
+  /* ✅ Hide action bar (Invoice Preview heading + buttons) */
+  #invoice-action-bar {
+    display: none !important;
   }
 
   /* Invoice paper — full page width */
