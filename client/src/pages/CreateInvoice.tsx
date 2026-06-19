@@ -302,133 +302,128 @@ export default function CreateInvoice({ params }: { params?: { id?: string } }) 
           </div>
         </div>
 
-        {/* Invoice paper — matches PDF 2 exactly */}
-        <div className="max-w-4xl mx-auto bg-white shadow-sm print:shadow-none print:max-w-none">
-          <div className="px-12 py-10">
+        {/* Invoice paper — single page, pixel-perfect match to PDF 2 */}
+        <div id="invoice-paper" style={{
+          maxWidth: "860px",
+          margin: "0 auto",
+          background: "#ffffff",
+          boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+          fontFamily: "'Inter','Helvetica Neue',Arial,sans-serif",
+        }}>
+          <div style={{ padding: "44px 52px" }}>
 
-            {/* ── TOP HEADER: Logo stacked above company name (left) | INVOICE big text (right) ── */}
-            <div className="flex items-start justify-between mb-8">
-              {/* Left: logo on top, then company name + contact below */}
-              <div className="flex items-center gap-4">
-                <img src={logoImg} alt="Logo" className="w-16 h-16 object-contain shrink-0" />
+            {/* TOP HEADER: Logo + Company (left) | INVOICE (right) */}
+            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "24px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "16px", flexShrink: 0 }}>
+                <img src={logoImg} alt="Logo" style={{ width: "60px", height: "60px", objectFit: "contain", flexShrink: 0 }} />
+                <div style={{ whiteSpace: "nowrap" }}>
+                  <div style={{ fontSize: "1.35rem", fontWeight: 800, color: "#0f172a", lineHeight: 1.2 }}>Curve Tech Solution</div>
+                  <div style={{ fontSize: "0.8rem", color: "#64748b", marginTop: "5px", lineHeight: 1.5 }}>hello@curvetechsolution.online</div>
+                  <div style={{ fontSize: "0.8rem", color: "#64748b", lineHeight: 1.5 }}>www.curvetechsolution.online</div>
+                </div>
+              </div>
+              <div style={{ fontSize: "3.25rem", fontWeight: 900, color: "#0f172a", letterSpacing: "0.12em", lineHeight: 1, whiteSpace: "nowrap", flexShrink: 0 }}>INVOICE</div>
+            </div>
+
+            {/* DIVIDER */}
+            <div style={{ borderTop: "1px solid #e2e8f0", marginBottom: "20px" }} />
+
+            {/* OFFICES (left) + META (right) */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "24px" }}>
+              <div style={{ display: "flex", gap: "44px" }}>
                 <div>
-                  <h2 className="text-2xl font-extrabold text-slate-900 leading-tight tracking-tight">Curve Tech Solution</h2>
-                  <p className="text-sm text-slate-500 mt-1">hello@curvetechsolution.online</p>
-                  <p className="text-sm text-slate-500">www.curvetechsolution.online</p>
+                  <div style={{ fontSize: "0.6rem", fontWeight: 700, textTransform: "uppercase" as const, letterSpacing: "0.09em", color: "#0f172a", marginBottom: "7px" }}>USA OFFICE</div>
+                  <div style={{ fontSize: "0.78rem", color: "#475569", lineHeight: 1.65, whiteSpace: "nowrap" }}>
+                    117 South Lexington Street,<br />
+                    Ste 100, Harrisonville, MO<br />
+                    64701, USA
+                  </div>
+                </div>
+                <div>
+                  <div style={{ fontSize: "0.6rem", fontWeight: 700, textTransform: "uppercase" as const, letterSpacing: "0.09em", color: "#0f172a", marginBottom: "7px" }}>PAKISTAN OFFICE</div>
+                  <div style={{ fontSize: "0.78rem", color: "#475569", lineHeight: 1.65, whiteSpace: "nowrap" }}>
+                    Office No 4, First Floor, Tariq<br />
+                    Business Center, Block H-3,<br />
+                    Johar Town, Lahore, 54000
+                  </div>
                 </div>
               </div>
-              {/* Right: INVOICE huge bold text */}
-              <h1 style={{ fontSize: "3.75rem", fontWeight: 900, letterSpacing: "0.15em", color: "#0f172a", lineHeight: 1 }}>INVOICE</h1>
-            </div>
 
-            {/* ── OFFICES (left) + INVOICE META (right) in one row, separated by thin line below header ── */}
-            <div style={{ borderTop: "1px solid #e2e8f0", paddingTop: "1.5rem", marginBottom: "2rem" }}>
-              <div className="flex justify-between items-start">
-                {/* Left: USA Office + Pakistan Office side by side */}
-                <div className="flex gap-16 text-sm">
-                  <div>
-                    <p style={{ fontWeight: 700, fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: "0.08em", color: "#0f172a", marginBottom: "0.5rem" }}>USA OFFICE</p>
-                    <p style={{ color: "#475569", lineHeight: "1.7" }}>
-                      117 South Lexington Street,<br />
-                      Ste 100, Harrisonville, MO<br />
-                      64701, USA
-                    </p>
-                  </div>
-                  <div>
-                    <p style={{ fontWeight: 700, fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: "0.08em", color: "#0f172a", marginBottom: "0.5rem" }}>PAKISTAN OFFICE</p>
-                    <p style={{ color: "#475569", lineHeight: "1.7" }}>
-                      Office No 4, First Floor, Tariq<br />
-                      Business Center, Block H-3,<br />
-                      Johar Town, Lahore, 54000
-                    </p>
-                  </div>
+              <div style={{ display: "grid", gridTemplateColumns: "auto auto", columnGap: "36px", rowGap: "14px", textAlign: "right" as const, flexShrink: 0 }}>
+                <div>
+                  <div style={{ fontSize: "0.58rem", fontWeight: 600, textTransform: "uppercase" as const, letterSpacing: "0.1em", color: "#94a3b8", marginBottom: "3px", whiteSpace: "nowrap" }}>INVOICE NUMBER</div>
+                  <div style={{ fontSize: "1.45rem", fontWeight: 900, color: "#0f172a", whiteSpace: "nowrap" }}>#{form.getValues("invoice.invoiceNumber")}</div>
                 </div>
-
-                {/* Right: Invoice meta — 2 col grid: Invoice Number | Bill To, then Issue Date | Due Date */}
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", columnGap: "3rem", rowGap: "1.25rem", textAlign: "right" }}>
-                  {/* Invoice Number */}
-                  <div>
-                    <p style={{ fontSize: "0.65rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.1em", color: "#94a3b8", marginBottom: "0.25rem" }}>INVOICE NUMBER</p>
-                    <p style={{ fontSize: "1.5rem", fontWeight: 900, color: "#0f172a" }}>#{form.getValues("invoice.invoiceNumber")}</p>
-                  </div>
-                  {/* Bill To */}
-                  <div>
-                    <p style={{ fontSize: "0.65rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.1em", color: "#94a3b8", marginBottom: "0.25rem" }}>BILL TO</p>
-                    <p style={{ fontSize: "0.95rem", fontWeight: 700, color: "#0f172a" }}>{form.getValues("invoice.clientName")}</p>
-                    {form.getValues("invoice.clientEmail") && <p style={{ fontSize: "0.75rem", color: "#64748b", marginTop: "0.15rem" }}>{form.getValues("invoice.clientEmail")}</p>}
-                    {form.getValues("invoice.clientPhone") && <p style={{ fontSize: "0.75rem", color: "#64748b" }}>{form.getValues("invoice.clientPhone")}</p>}
-                  </div>
-                  {/* Issue Date */}
-                  <div>
-                    <p style={{ fontSize: "0.65rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.1em", color: "#94a3b8", marginBottom: "0.25rem" }}>ISSUE DATE</p>
-                    <p style={{ fontSize: "0.875rem", fontWeight: 500, color: "#334155" }}>{form.getValues("invoice.issueDate") ? format(new Date(form.getValues("invoice.issueDate") as any), "MMM d, yyyy") : ""}</p>
-                  </div>
-                  {/* Due Date */}
-                  <div>
-                    <p style={{ fontSize: "0.65rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.1em", color: "#94a3b8", marginBottom: "0.25rem" }}>DUE DATE</p>
-                    <p style={{ fontSize: "0.875rem", fontWeight: 700, color: "#ef4444" }}>{form.getValues("invoice.dueDate") ? format(new Date(form.getValues("invoice.dueDate") as any), "MMM d, yyyy") : ""}</p>
-                  </div>
+                <div>
+                  <div style={{ fontSize: "0.58rem", fontWeight: 600, textTransform: "uppercase" as const, letterSpacing: "0.1em", color: "#94a3b8", marginBottom: "3px", whiteSpace: "nowrap" }}>BILL TO</div>
+                  <div style={{ fontSize: "0.9rem", fontWeight: 700, color: "#0f172a" }}>{form.getValues("invoice.clientName")}</div>
+                  {form.getValues("invoice.clientEmail") && <div style={{ fontSize: "0.72rem", color: "#64748b", marginTop: "2px" }}>{form.getValues("invoice.clientEmail")}</div>}
+                  {form.getValues("invoice.clientPhone") && <div style={{ fontSize: "0.72rem", color: "#64748b" }}>{form.getValues("invoice.clientPhone")}</div>}
+                </div>
+                <div>
+                  <div style={{ fontSize: "0.58rem", fontWeight: 600, textTransform: "uppercase" as const, letterSpacing: "0.1em", color: "#94a3b8", marginBottom: "3px", whiteSpace: "nowrap" }}>ISSUE DATE</div>
+                  <div style={{ fontSize: "0.84rem", fontWeight: 500, color: "#334155", whiteSpace: "nowrap" }}>{form.getValues("invoice.issueDate") ? format(new Date(form.getValues("invoice.issueDate") as any), "MMM d, yyyy") : ""}</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: "0.58rem", fontWeight: 600, textTransform: "uppercase" as const, letterSpacing: "0.1em", color: "#94a3b8", marginBottom: "3px", whiteSpace: "nowrap" }}>DUE DATE</div>
+                  <div style={{ fontSize: "0.84rem", fontWeight: 700, color: "#ef4444", whiteSpace: "nowrap" }}>{form.getValues("invoice.dueDate") ? format(new Date(form.getValues("invoice.dueDate") as any), "MMM d, yyyy") : ""}</div>
                 </div>
               </div>
             </div>
 
-            {/* ── THIN DIVIDER before table ── */}
-            <div style={{ borderTop: "1px solid #e2e8f0", marginBottom: "1.5rem" }} />
+            {/* DIVIDER before table */}
+            <div style={{ borderTop: "1px solid #e2e8f0", marginBottom: "18px" }} />
 
-            {/* ── ITEMS TABLE — matches PDF 2: bordered box, bold headers, light gray row bg ── */}
-            <div style={{ border: "1px solid #e2e8f0", borderRadius: "0.5rem", overflow: "hidden", marginBottom: "2rem" }}>
-              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.875rem" }}>
+            {/* ITEMS TABLE */}
+            <div style={{ border: "1px solid #e2e8f0", borderRadius: "8px", overflow: "hidden", marginBottom: "24px" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse" as const, fontSize: "0.84rem" }}>
                 <thead>
                   <tr style={{ borderBottom: "1px solid #e2e8f0", background: "#ffffff" }}>
-                    <th style={{ padding: "0.875rem 1.5rem", textAlign: "left", fontSize: "0.7rem", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.08em" }}>Description</th>
-                    <th style={{ padding: "0.875rem 1.5rem", textAlign: "center", fontSize: "0.7rem", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.08em", width: "9rem" }}>Price</th>
-                    <th style={{ padding: "0.875rem 1.5rem", textAlign: "center", fontSize: "0.7rem", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.08em", width: "9rem" }}>Discount</th>
-                    <th style={{ padding: "0.875rem 1.5rem", textAlign: "right", fontSize: "0.7rem", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.08em", width: "10rem" }}>Total</th>
+                    <th style={{ padding: "12px 18px", textAlign: "left" as const, fontSize: "0.65rem", fontWeight: 700, color: "#64748b", textTransform: "uppercase" as const, letterSpacing: "0.08em" }}>Description</th>
+                    <th style={{ padding: "12px 18px", textAlign: "center" as const, fontSize: "0.65rem", fontWeight: 700, color: "#64748b", textTransform: "uppercase" as const, letterSpacing: "0.08em", width: "120px", whiteSpace: "nowrap" }}>Price</th>
+                    <th style={{ padding: "12px 18px", textAlign: "center" as const, fontSize: "0.65rem", fontWeight: 700, color: "#64748b", textTransform: "uppercase" as const, letterSpacing: "0.08em", width: "110px", whiteSpace: "nowrap" }}>Discount</th>
+                    <th style={{ padding: "12px 18px", textAlign: "right" as const, fontSize: "0.65rem", fontWeight: 700, color: "#64748b", textTransform: "uppercase" as const, letterSpacing: "0.08em", width: "140px", whiteSpace: "nowrap" }}>Total</th>
                   </tr>
                 </thead>
                 <tbody>
                   {watchedItems.map((item, idx) => (
                     <tr key={idx} style={{ borderBottom: idx < watchedItems.length - 1 ? "1px solid #f1f5f9" : "none", background: "#f8fafc" }}>
-                      <td style={{ padding: "1.5rem", verticalAlign: "top" }}>
-                        <p style={{ fontWeight: 700, color: "#0f172a", fontSize: "0.875rem" }}>{item.title}</p>
-                        {item.description && <p style={{ color: "#64748b", fontSize: "0.8rem", marginTop: "0.35rem", lineHeight: "1.5" }}>{item.description}</p>}
+                      <td style={{ padding: "18px", verticalAlign: "top" }}>
+                        <div style={{ fontWeight: 700, color: "#0f172a", fontSize: "0.84rem" }}>{item.title}</div>
+                        {item.description && <div style={{ color: "#64748b", fontSize: "0.76rem", marginTop: "4px", lineHeight: 1.5 }}>{item.description}</div>}
                       </td>
-                      <td style={{ padding: "1.5rem", textAlign: "center", color: "#475569", verticalAlign: "top" }}>{currency} {Number(item.price || 0).toLocaleString()}</td>
-                      <td style={{ padding: "1.5rem", textAlign: "center", color: "#64748b", verticalAlign: "top" }}>
+                      <td style={{ padding: "18px", textAlign: "center" as const, color: "#475569", verticalAlign: "top", whiteSpace: "nowrap" }}>{currency} {Number(item.price || 0).toLocaleString()}</td>
+                      <td style={{ padding: "18px", textAlign: "center" as const, color: "#64748b", verticalAlign: "top", whiteSpace: "nowrap" }}>
                         {item.discountValue && Number(item.discountValue) > 0
                           ? (item.discountType === "percentage" ? `${item.discountValue}%` : `${currency} ${item.discountValue}`)
                           : "–"}
                       </td>
-                      <td style={{ padding: "1.5rem", textAlign: "right", fontWeight: 700, color: "#0f172a", verticalAlign: "top" }}>{fmt(item.total)}</td>
+                      <td style={{ padding: "18px", textAlign: "right" as const, fontWeight: 700, color: "#0f172a", verticalAlign: "top", whiteSpace: "nowrap" }}>{fmt(item.total)}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
 
-            {/* ── BOTTOM: Terms left, totals right ── */}
-            <div style={{ display: "flex", justifyContent: "space-between", gap: "3rem", alignItems: "flex-start" }}>
-              {/* Terms & Conditions — only if present */}
+            {/* BOTTOM: Terms left, totals right */}
+            <div style={{ display: "flex", justifyContent: "space-between", gap: "36px", alignItems: "flex-start" }}>
               {form.getValues("invoice.description") && (
                 <div style={{ flex: 1 }}>
-                  <p style={{ fontSize: "0.65rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "#94a3b8", marginBottom: "0.6rem" }}>Terms &amp; Conditions</p>
-                  <p style={{ fontSize: "0.8rem", color: "#64748b", lineHeight: "1.6", whiteSpace: "pre-wrap" }}>{form.getValues("invoice.description")}</p>
+                  <div style={{ fontSize: "0.6rem", fontWeight: 700, textTransform: "uppercase" as const, letterSpacing: "0.1em", color: "#94a3b8", marginBottom: "7px" }}>Terms &amp; Conditions</div>
+                  <div style={{ fontSize: "0.76rem", color: "#64748b", lineHeight: 1.6, whiteSpace: "pre-wrap" }}>{form.getValues("invoice.description")}</div>
                 </div>
               )}
 
-              {/* Right: totals panel — exactly matches PDF 2 */}
-              <div style={{ width: "18rem", flexShrink: 0 }}>
-                {/* Subtotal row */}
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0.6rem 0", borderBottom: "1px solid #e2e8f0" }}>
-                  <span style={{ fontSize: "0.875rem", color: "#64748b" }}>Subtotal</span>
-                  <span style={{ fontSize: "0.875rem", color: "#1e293b" }}>{fmt(form.getValues("invoice.subtotal"))}</span>
+              <div style={{ width: "270px", flexShrink: 0 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "7px 0", borderBottom: "1px solid #e2e8f0" }}>
+                  <span style={{ fontSize: "0.84rem", color: "#64748b" }}>Subtotal</span>
+                  <span style={{ fontSize: "0.84rem", color: "#1e293b" }}>{fmt(form.getValues("invoice.subtotal"))}</span>
                 </div>
 
-                {/* Subtotal discount row */}
                 {Number(form.getValues("invoice.subtotalDiscountValue")) > 0 && (
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0.6rem 0", borderBottom: "1px solid #e2e8f0" }}>
-                    <span style={{ fontSize: "0.875rem", color: "#64748b" }}>Discount</span>
-                    <span style={{ fontSize: "0.875rem", color: "#1e293b" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "7px 0", borderBottom: "1px solid #e2e8f0" }}>
+                    <span style={{ fontSize: "0.84rem", color: "#64748b" }}>Discount</span>
+                    <span style={{ fontSize: "0.84rem", color: "#1e293b" }}>
                       {form.getValues("invoice.subtotalDiscountType") === "percentage"
                         ? `${form.getValues("invoice.subtotalDiscountValue")}%`
                         : fmt(form.getValues("invoice.subtotalDiscountValue"))}
@@ -436,11 +431,10 @@ export default function CreateInvoice({ params }: { params?: { id?: string } }) 
                   </div>
                 )}
 
-                {/* Tax row */}
                 {Number(form.getValues("invoice.taxValue")) > 0 && (
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0.6rem 0", borderBottom: "1px solid #e2e8f0" }}>
-                    <span style={{ fontSize: "0.875rem", color: "#64748b" }}>Tax</span>
-                    <span style={{ fontSize: "0.875rem", color: "#1e293b" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "7px 0", borderBottom: "1px solid #e2e8f0" }}>
+                    <span style={{ fontSize: "0.84rem", color: "#64748b" }}>Tax</span>
+                    <span style={{ fontSize: "0.84rem", color: "#1e293b" }}>
                       {form.getValues("invoice.taxType") === "percentage"
                         ? `${form.getValues("invoice.taxValue")}%`
                         : fmt(form.getValues("invoice.taxValue"))}
@@ -448,33 +442,29 @@ export default function CreateInvoice({ params }: { params?: { id?: string } }) 
                   </div>
                 )}
 
-                {/* Total Due — full dark filled box like PDF 2 */}
-                <div style={{ background: "#0f172a", color: "#ffffff", borderRadius: "0.375rem", padding: "0.875rem 1.25rem", display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "0.5rem" }}>
-                  <span style={{ fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "#cbd5e1" }}>TOTAL DUE</span>
-                  <span style={{ fontSize: "1.25rem", fontWeight: 900, color: "#ffffff" }}>{fmt(form.getValues("invoice.totalAmount"))}</span>
+                <div style={{ background: "#0f172a", color: "#ffffff", borderRadius: "6px", padding: "13px 18px", display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "7px" }}>
+                  <span style={{ fontSize: "0.65rem", fontWeight: 700, textTransform: "uppercase" as const, letterSpacing: "0.12em", color: "#cbd5e1", whiteSpace: "nowrap" }}>TOTAL DUE</span>
+                  <span style={{ fontSize: "1.2rem", fontWeight: 900, color: "#ffffff", whiteSpace: "nowrap" }}>{fmt(form.getValues("invoice.totalAmount"))}</span>
                 </div>
 
-                {/* Deposit Requested */}
                 {Number(form.getValues("invoice.depositRequested")) > 0 && (
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: "0.75rem" }}>
-                    <span style={{ fontSize: "0.875rem", color: "#64748b" }}>Deposit Requested</span>
-                    <span style={{ fontSize: "0.875rem", fontWeight: 700, color: "#1e293b" }}>{fmt(form.getValues("invoice.depositRequested"))}</span>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: "9px" }}>
+                    <span style={{ fontSize: "0.84rem", color: "#64748b" }}>Deposit Requested</span>
+                    <span style={{ fontSize: "0.84rem", fontWeight: 700, color: "#1e293b" }}>{fmt(form.getValues("invoice.depositRequested"))}</span>
                   </div>
                 )}
 
-                {/* Paid Amount */}
                 {Number(form.getValues("invoice.paidAmount")) > 0 && (
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: "0.5rem" }}>
-                    <span style={{ fontSize: "0.875rem", color: "#64748b" }}>Amount Paid</span>
-                    <span style={{ fontSize: "0.875rem", fontWeight: 700, color: "#1e293b" }}>{fmt(form.getValues("invoice.paidAmount"))}</span>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: "5px" }}>
+                    <span style={{ fontSize: "0.84rem", color: "#64748b" }}>Amount Paid</span>
+                    <span style={{ fontSize: "0.84rem", fontWeight: 700, color: "#1e293b" }}>{fmt(form.getValues("invoice.paidAmount"))}</span>
                   </div>
                 )}
 
-                {/* Remaining balance */}
                 {Number(form.getValues("invoice.paidAmount")) > 0 && (
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: "0.75rem", marginTop: "0.5rem", borderTop: "1px solid #e2e8f0" }}>
-                    <span style={{ fontSize: "0.875rem", fontWeight: 700, color: "#334155" }}>Remaining Balance</span>
-                    <span style={{ fontSize: "0.875rem", fontWeight: 900, color: "#0f172a" }}>{fmt(form.getValues("invoice.payableAmount"))}</span>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: "9px", marginTop: "5px", borderTop: "1px solid #e2e8f0" }}>
+                    <span style={{ fontSize: "0.84rem", fontWeight: 700, color: "#334155" }}>Remaining Balance</span>
+                    <span style={{ fontSize: "0.84rem", fontWeight: 900, color: "#0f172a" }}>{fmt(form.getValues("invoice.payableAmount"))}</span>
                   </div>
                 )}
               </div>
@@ -485,56 +475,19 @@ export default function CreateInvoice({ params }: { params?: { id?: string } }) 
 
         <style dangerouslySetInnerHTML={{ __html: `
           @media print {
-            * {
-              -webkit-print-color-adjust: exact !important;
-              print-color-adjust: exact !important;
-            }
-
-            @page {
-              size: A4 portrait;
-              margin: 1.2cm 1.5cm;
-            }
-
-            html, body {
-              background: white !important;
-              margin: 0 !important;
-              padding: 0 !important;
-              width: 100% !important;
-            }
-
-            #invoice-action-bar {
-              display: none !important;
-            }
-
-            #invoice-print-root {
-              background: white !important;
-              padding: 0 !important;
-              margin: 0 !important;
-              min-height: unset !important;
-            }
-
-            #invoice-print-root .max-w-4xl {
-              max-width: 100% !important;
-              margin: 0 !important;
-              box-shadow: none !important;
-            }
-
-            #invoice-print-root table {
-              width: 100% !important;
-              border-collapse: collapse !important;
-            }
-
-            #invoice-print-root tr,
-            #invoice-print-root th,
-            #invoice-print-root td {
-              page-break-inside: avoid !important;
-            }
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            @page { size: A4 portrait; margin: 0.7cm 0.9cm; }
+            html, body { background: white !important; margin: 0 !important; padding: 0 !important; }
+            #invoice-action-bar { display: none !important; }
+            #invoice-print-root { background: white !important; padding: 0 !important; margin: 0 !important; min-height: unset !important; }
+            #invoice-paper { max-width: 100% !important; width: 100% !important; margin: 0 !important; box-shadow: none !important; }
+            #invoice-paper * { page-break-inside: avoid !important; }
+            #invoice-paper table { width: 100% !important; border-collapse: collapse !important; }
           }
         ` }} />
       </div>
     );
   }
-
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 p-3 sm:p-4 md:p-8">
