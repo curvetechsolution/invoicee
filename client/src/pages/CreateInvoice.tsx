@@ -310,10 +310,10 @@ export default function CreateInvoice({ params }: { params?: { id?: string } }) 
           fontFamily: "'Inter','Helvetica Neue',Arial,sans-serif",
           borderRadius: "4px",
         }}>
-          <div style={{ padding: "48px 56px" }}>
+          <div className="inv-pad" style={{ padding: "48px 56px" }}>
 
             {/* ── TOP HEADER: Logo + Company LEFT | INVOICE RIGHT ── */}
-            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "32px" }}>
+            <div className="inv-mb" style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "32px" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "18px" }}>
                 <img src={logoImg} alt="Logo" style={{ width: "68px", height: "68px", objectFit: "contain", flexShrink: 0 }} />
                 <div>
@@ -326,10 +326,10 @@ export default function CreateInvoice({ params }: { params?: { id?: string } }) 
             </div>
 
             {/* ── DIVIDER ── */}
-            <div style={{ borderTop: "1.5px solid #e2e8f0", marginBottom: "28px" }} />
+            <div className="inv-mb" style={{ borderTop: "1.5px solid #e2e8f0", marginBottom: "28px" }} />
 
             {/* ── OFFICES (left) + META GRID (right) ── */}
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "32px" }}>
+            <div className="inv-mb" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "32px" }}>
 
               {/* Left: USA + Pakistan side by side */}
               <div style={{ display: "flex", gap: "60px" }}>
@@ -375,10 +375,10 @@ export default function CreateInvoice({ params }: { params?: { id?: string } }) 
             </div>
 
             {/* ── DIVIDER before table ── */}
-            <div style={{ borderTop: "1.5px solid #e2e8f0", marginBottom: "22px" }} />
+            <div className="inv-mb" style={{ borderTop: "1.5px solid #e2e8f0", marginBottom: "22px" }} />
 
             {/* ── ITEMS TABLE ── */}
-            <div style={{ border: "1px solid #e2e8f0", borderRadius: "10px", overflow: "hidden", marginBottom: "32px" }}>
+            <div className="inv-mb" style={{ border: "1px solid #e2e8f0", borderRadius: "10px", overflow: "hidden", marginBottom: "32px" }}>
               <table style={{ width: "100%", borderCollapse: "collapse" as const, fontSize: "0.88rem" }}>
                 <thead>
                   <tr style={{ borderBottom: "1px solid #e2e8f0", background: "#ffffff" }}>
@@ -483,14 +483,26 @@ export default function CreateInvoice({ params }: { params?: { id?: string } }) 
         <style dangerouslySetInnerHTML={{ __html: `
           @media print {
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-            @page { size: landscape; margin: 0.6cm 0.8cm; }
+            @page { size: A4 landscape; margin: 0.5cm 0.7cm; }
             html, body { background: white !important; margin: 0 !important; padding: 0 !important; }
             #invoice-action-bar { display: none !important; }
             #invoice-print-root { background: white !important; padding: 0 !important; margin: 0 !important; min-height: unset !important; }
+
+            /* Force the whole invoice onto ONE page — no breaks anywhere */
+            #invoice-paper, #invoice-paper * { page-break-inside: avoid !important; break-inside: avoid !important; }
             #invoice-paper { max-width: 100% !important; width: 100% !important; margin: 0 !important; box-shadow: none !important; border-radius: 0 !important; }
-            #invoice-paper > div { padding: 24px 32px !important; }
-            #invoice-paper * { page-break-inside: avoid !important; }
-            #invoice-paper table { width: 100% !important; border-collapse: collapse !important; }
+
+            /* Compress paper padding + every big vertical spacer */
+            #invoice-paper .inv-pad { padding: 14px 22px !important; }
+            #invoice-paper .inv-mb { margin-bottom: 12px !important; }
+
+            /* Tighten the items table — biggest space hog */
+            #invoice-paper table { width: 100% !important; border-collapse: collapse !important; font-size: 0.8rem !important; }
+            #invoice-paper thead th { padding: 7px 14px !important; }
+            #invoice-paper tbody td { padding: 9px 14px !important; }
+
+            /* Shrink logo a touch */
+            #invoice-paper img { width: 54px !important; height: 54px !important; }
           }
         ` }} />
       </div>
