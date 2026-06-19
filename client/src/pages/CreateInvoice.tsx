@@ -483,7 +483,7 @@ export default function CreateInvoice({ params }: { params?: { id?: string } }) 
         <style dangerouslySetInnerHTML={{ __html: `
           @media print {
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-            @page { size: A4 landscape; margin: 0.5cm 0.7cm; }
+            @page { size: A4 portrait; margin: 0.5cm 0.7cm; }
             html, body { background: white !important; margin: 0 !important; padding: 0 !important; }
             #invoice-action-bar { display: none !important; }
             #invoice-print-root { background: white !important; padding: 0 !important; margin: 0 !important; min-height: unset !important; }
