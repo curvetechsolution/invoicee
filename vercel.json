@@ -3,7 +3,8 @@
   "outputDirectory": "dist/public",
   "functions": {
     "api/index.ts": {
-      "maxDuration": 30
+      "maxDuration": 30,
+      "includeFiles": "{server,shared}/**"
     }
   },
   "rewrites": [
@@ -14,7 +15,7 @@
     {
       "source": "/api/(.*)",
       "headers": [
-        { "key": "Access-Control-Allow-Origin", "value": "https://package.curvetechsolution.online" },
+        { "key": "Access-Control-Allow-Origin", "value": "https://invoice.curvetechsolution.online" },
         { "key": "Access-Control-Allow-Methods", "value": "GET, POST, PATCH, PUT, DELETE, OPTIONS" },
         { "key": "Access-Control-Allow-Headers", "value": "Content-Type, Authorization" },
         { "key": "Access-Control-Allow-Credentials", "value": "true" }
