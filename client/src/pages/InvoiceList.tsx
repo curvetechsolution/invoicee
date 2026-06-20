@@ -152,7 +152,8 @@ export default function InvoiceList() {
 
       // 5. Save to DB and WAIT for confirmation before doing anything else.
       // If this fails, we stop here — no Supabase status change, no toast, no redirect.
-      await apiRequest("POST", "/api/invoices", { invoice: newInvoice, items });
+      const createRes = await apiRequest("POST", "/api/invoices", { invoice: newInvoice, items });
+      const createdInvoice = await createRes.json();
 
       // 6. Mark as accepted in Supabase (only after DB save succeeded)
       await updateSupabaseStatus(String(req.id), "accepted");
@@ -168,8 +169,8 @@ export default function InvoiceList() {
         description: `Invoice #${nextNumber} created for ${req.clientName}.`,
       });
 
-      // 8. Go to preview — CreateInvoice will load from the database
-      setLocation(`/invoices/${nextNumber}/preview`);
+      // 8. Go to preview — use invoice id (not invoice number) for the route
+      setLocation(`/invoices/${createdInvoice.id}/preview`);
 
     } catch (err: any) {
       toast({
