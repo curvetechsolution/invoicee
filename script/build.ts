@@ -59,6 +59,27 @@ async function buildAll() {
     external: externals,
     logLevel: "info",
   });
+
+  console.log("building Vercel serverless function (api/index.ts)...");
+  // Bundle the Vercel entry point into a single self-contained file.
+  // This resolves the "@shared/*" tsconfig path alias and the relative
+  // "../server/routes" import at BUILD time, so Vercel's runtime never
+  // has to resolve them itself (which was causing ERR_MODULE_NOT_FOUND).
+  // Output uses a distinct name from the .ts source to avoid any ambiguity
+  // in Vercel's function detection.
+  await esbuild({
+    entryPoints: ["api/index.ts"],
+    platform: "node",
+    bundle: true,
+    format: "cjs",
+    outfile: "api/handler.js",
+    define: {
+      "process.env.NODE_ENV": '"production"',
+    },
+    minify: true,
+    external: externals,
+    logLevel: "info",
+  });
 }
 
 buildAll().catch((err) => {
