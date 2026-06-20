@@ -176,10 +176,7 @@ export default function Home() {
           />
           <StatCard
             title="Issued Invoices"
-            value={(stats?.totalInvoices || 0) + (() => {
-              const local = JSON.parse(localStorage.getItem("invoices") || "[]");
-              return local.length;
-            })()}
+            value={stats?.totalInvoices || 0}
             icon={FileText}
             delay="delay-100"
             className="border-l-4 border-l-blue-500"
