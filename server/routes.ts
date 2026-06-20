@@ -18,14 +18,16 @@ export async function registerRoutes(
     res.json(stats);
   });
 
-  app.get(api.invoices.getNextNumber.path, async (req, res) => {
-    const nextNumber = await storage.getNextInvoiceNumber();
-    res.json({ nextNumber });
-  });
-
   app.get("/api/invoices", async (req, res) => {
     const invoices = await storage.getAllInvoices();
     res.json(invoices);
+  });
+
+  // ⚠️ IMPORTANT: This MUST be before /api/invoices/:id
+  // Otherwise Express matches "next-number" as the :id param → parseInt("next-number") = NaN → crash
+  app.get(api.invoices.getNextNumber.path, async (req, res) => {
+    const nextNumber = await storage.getNextInvoiceNumber();
+    res.json({ nextNumber });
   });
 
   app.get("/api/invoices/:id", async (req, res) => {
