@@ -72,7 +72,7 @@ async function buildAll() {
     platform: "node",
     bundle: true,
     format: "cjs",
-    outfile: "api/handler.js",
+    outfile: "api/handler.cjs",
     define: {
       "process.env.NODE_ENV": '"production"',
     },
