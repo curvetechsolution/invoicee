@@ -71,36 +71,19 @@ export default function CreateInvoice({ params }: { params?: { id?: string } }) 
   });
 
   useEffect(() => {
-    const storedInvoices = JSON.parse(localStorage.getItem("invoices") || "[]");
-    const invoiceId = params?.id ? params.id : null; // keep as string for comparison
-    const isEditMode = invoiceId !== undefined && invoiceId !== null;
-    
-    if (isEditMode) {
-      // Find by id OR invoiceNumber — compare as strings to avoid type mismatch
-      const existingInvoice = storedInvoices.find((inv: any) =>
-        String(inv.id) === String(invoiceId) || String(inv.invoiceNumber) === String(invoiceId)
-      );
-      if (existingInvoice) {
-        form.reset({
-          invoice: existingInvoice,
-          items: (existingInvoice.items || []).map((item: any) => ({
-            ...item,
-            price: String(item.price),
-            discountValue: String(item.discountValue || "0"),
-            total: String(item.total)
-          }))
-        });
-      } else if (invoiceData) {
-        form.reset({
-          invoice: invoiceData.invoice,
-          items: invoiceData.items.map(item => ({
-            ...item,
-            price: String(item.price),
-            discountValue: String(item.discountValue),
-            total: String(item.total)
-          }))
-        });
-      }
+    const invoiceId = params?.id ? params.id : null;
+    const isEditModeLocal = invoiceId !== undefined && invoiceId !== null;
+
+    if (isEditModeLocal && invoiceData) {
+      form.reset({
+        invoice: invoiceData.invoice,
+        items: invoiceData.items.map(item => ({
+          ...item,
+          price: String(item.price),
+          discountValue: String(item.discountValue),
+          total: String(item.total)
+        }))
+      });
     }
   }, [params?.id, invoiceData, form]);
 
@@ -243,41 +226,23 @@ export default function CreateInvoice({ params }: { params?: { id?: string } }) 
         queryClient.invalidateQueries({ queryKey: [`/api/invoices/${params.id}`] });
       }
       queryClient.invalidateQueries({ queryKey: ["/api/invoices/next-number"] });
+      toast({
+        title: isEditMode ? "✅ Invoice Updated" : "✅ Invoice Created",
+        description: isEditMode ? "Your invoice has been updated successfully." : "Your invoice has been saved successfully."
+      });
+      setLocation("/invoices");
     },
-    onError: () => {/* DB sync failed silently — localStorage is source of truth */}
+    onError: (error: any) => {
+      toast({
+        title: "❌ Save Failed",
+        description: `Invoice was NOT saved. ${error?.message || "Please check your connection and try again."}`,
+        variant: "destructive"
+      });
+    }
   });
 
   const handleFormSubmit = async (data: FormValues) => {
-    try {
-      const storedInvoices = JSON.parse(localStorage.getItem("invoices") || "[]");
-      const invoiceId = params?.id || null;
-      const isEditModeLocal = invoiceId !== undefined && invoiceId !== null && invoiceId !== "";
-
-      if (isEditModeLocal) {
-        // UPDATE in localStorage — compare as strings to avoid type mismatch
-        const updatedInvoices = storedInvoices.map((inv: any) =>
-          String(inv.id) === String(invoiceId) || String(inv.invoiceNumber) === String(invoiceId)
-            ? { ...data.invoice, id: inv.id, invoiceNumber: inv.invoiceNumber, items: data.items }
-            : inv
-        );
-        localStorage.setItem("invoices", JSON.stringify(updatedInvoices));
-        toast({ title: "✅ Invoice Updated", description: "Your invoice has been updated successfully." });
-      } else {
-        // CREATE in localStorage
-        const newId = data.invoice.invoiceNumber;
-        const newInvoice = { ...data.invoice, id: newId, items: data.items };
-        localStorage.setItem("invoices", JSON.stringify([...storedInvoices, newInvoice]));
-        toast({ title: "✅ Invoice Created", description: "Your invoice has been saved successfully." });
-      }
-
-      // Sync with DB in background — don't block or show error to user
-      mutation.mutate(data);
-
-      // Redirect immediately — don't wait for DB
-      setLocation("/invoices");
-    } catch (error) {
-      console.error("Error saving to localStorage:", error);
-    }
+    mutation.mutate(data);
   };
 
   if (isPreviewMode) {
